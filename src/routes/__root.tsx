@@ -7,6 +7,7 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 
 import Header from '../components/Header'
+import BottomNav from '../components/BottomNav'
 import { AuthProvider } from '../hooks/useAuth'
 
 import StoreDevtools from '../lib/demo-store-devtools'
@@ -55,7 +56,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         <AuthProvider>
           <Header />
-          {children}
+          <div className="pb-20 md:pb-0">
+            {children}
+          </div>
+          <BottomNav />
           <TanStackDevtools
             config={{
               position: 'bottom-right',
