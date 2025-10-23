@@ -42,6 +42,13 @@ interface SocialAccount {
 	avatar?: string;
 }
 
+interface AccountGroup {
+	id: string;
+	name: string;
+	accountIds: string[];
+	createdAt: string;
+}
+
 const PLATFORMS = {
 	facebook: { name: "Facebook", icon: Facebook },
 	linkedin: { name: "LinkedIn", icon: Linkedin },
@@ -65,6 +72,12 @@ function CreatePost() {
 	const [isScheduled, setIsScheduled] = useState(false);
 	const [scheduleDate, setScheduleDate] = useState("");
 	const [scheduleTime, setScheduleTime] = useState("");
+	
+	// Account groups state
+	const [accountGroups, setAccountGroups] = useState<AccountGroup[]>([]);
+	const [activeTab, setActiveTab] = useState<'accounts' | 'groups'>('accounts');
+	const [showGroupModal, setShowGroupModal] = useState(false);
+	const [groupName, setGroupName] = useState("");
 
 	// Mock connected social accounts
 	const [connectedAccounts, _setConnectedAccounts] = useState<SocialAccount[]>([
@@ -80,6 +93,25 @@ function CreatePost() {
 			router.navigate({ to: "/login" });
 		}
 	}, [user, router]);
+	
+	// Load account groups from localStorage on mount
+	useEffect(() => {
+		const storedGroups = localStorage.getItem('accountGroups');
+		if (storedGroups) {
+			try {
+				setAccountGroups(JSON.parse(storedGroups));
+			} catch (error) {
+				console.error('Error loading account groups:', error);
+			}
+		}
+	}, []);
+	
+	// Save account groups to localStorage whenever they change
+	useEffect(() => {
+		if (accountGroups.length > 0) {
+			localStorage.setItem('accountGroups', JSON.stringify(accountGroups));
+		}
+	}, [accountGroups]);
 
 	const getAccountsForPostType = (type: PostType): SocialAccount[] => {
 		const supportedPlatforms = {
@@ -99,6 +131,32 @@ function CreatePost() {
 		} else {
 			setSelectedAccounts([...selectedAccounts, accountId]);
 		}
+	};
+	
+	const saveAsGroup = () => {
+		if (groupName.trim() && selectedAccounts.length > 1) {
+			const newGroup: AccountGroup = {
+				id: Date.now().toString(),
+				name: groupName.trim(),
+				accountIds: [...selectedAccounts],
+				createdAt: new Date().toISOString(),
+			};
+			setAccountGroups([...accountGroups, newGroup]);
+			setGroupName('');
+			setShowGroupModal(false);
+		}
+	};
+	
+	const deleteGroup = (groupId: string) => {
+		setAccountGroups(accountGroups.filter(group => group.id !== groupId));
+	};
+	
+	const selectGroup = (group: AccountGroup) => {
+		setSelectedAccounts(group.accountIds);
+	};
+	
+	const getAccountsForGroup = (group: AccountGroup): SocialAccount[] => {
+		return connectedAccounts.filter(account => group.accountIds.includes(account.id));
 	};
 
 	const handleBack = () => {
@@ -277,50 +335,142 @@ function CreatePost() {
 							<div
 								className={`mb-8 p-4 ${theme.card} rounded-lg border ${theme.border}`}
 							>
-								<h3 className={`font-semibold ${theme.text} mb-4`}>
-									Connected Accounts
-								</h3>
-								<div className="space-y-3">
-									{getAccountsForPostType(postType).map((account) => {
-										const IconComponent = PLATFORMS[account.platform].icon;
-										return (
-											<div
-												key={account.id}
-												className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${
-													selectedAccounts.includes(account.id)
-														? `border-blue-500 bg-blue-50 dark:bg-blue-900/20`
-														: `${theme.border} ${theme.card}`
-												}`}
-												onClick={() => toggleAccount(account.id)}
-											>
-												<div className="flex items-center gap-3">
-													<div className="text-lg">
-														<IconComponent className="w-5 h-5" />
-													</div>
-													<div>
-														<p className={`text-sm font-medium ${theme.text}`}>
-															{account.name}
-														</p>
-														<p className={`text-xs ${theme.textSecondary}`}>
-															{PLATFORMS[account.platform].name}
-														</p>
-													</div>
-												</div>
-												<div className={`w-4 h-4 rounded-full border-2 ${
-													selectedAccounts.includes(account.id)
-														? 'bg-blue-500 border-blue-500'
-														: `${theme.border}`
-												}`}>
-													{selectedAccounts.includes(account.id) && (
-														<svg className="w-full h-full text-white p-0.5" viewBox="0 0 20 20" fill="currentColor">
-															<path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-														</svg>
-													)}
-												</div>
-											</div>
-										);
-									})}
+								{/* Tabs */}
+								<div className="flex items-center justify-between mb-4">
+									<div className="flex gap-2">
+										<button
+											type="button"
+											onClick={() => setActiveTab('accounts')}
+											className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+												activeTab === 'accounts'
+													? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+													: `${theme.textSecondary} hover:${theme.text}`
+											}`}
+										>
+											Connected Accounts
+										</button>
+										<button
+											type="button"
+											onClick={() => setActiveTab('groups')}
+											className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+												activeTab === 'groups'
+													? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+													: `${theme.textSecondary} hover:${theme.text}`
+											}`}
+										>
+											Account Groups ({accountGroups.length})
+										</button>
+									</div>
 								</div>
+
+								{/* Save as Group Button */}
+								{activeTab === 'accounts' && selectedAccounts.length > 1 && (
+									<div className="mb-4">
+										<button
+											type="button"
+											onClick={() => setShowGroupModal(true)}
+											className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
+										>
+											Save {selectedAccounts.length} accounts as group
+										</button>
+									</div>
+								)}
+
+								{/* Tab Content */}
+								{activeTab === 'accounts' ? (
+									<div className="flex flex-wrap gap-3">
+										{getAccountsForPostType(postType).map((account) => {
+											const IconComponent = PLATFORMS[account.platform].icon;
+											return (
+												<div
+													key={account.id}
+													className={`flex items-center gap-2 px-4 py-2 rounded-full border cursor-pointer transition-all ${
+														selectedAccounts.includes(account.id)
+															? `border-blue-500 bg-blue-50 dark:bg-blue-900/20`
+															: `${theme.border} ${theme.card} hover:border-opacity-50`
+													}`}
+													onClick={() => toggleAccount(account.id)}
+												>
+													<div className="flex items-center gap-2">
+														<IconComponent className={`w-4 h-4 ${
+															selectedAccounts.includes(account.id) ? 'text-blue-600' : theme.textSecondary
+														}`} />
+														<span className={`text-sm font-medium ${
+															selectedAccounts.includes(account.id) ? 'text-blue-600' : theme.text
+														}`}>
+															{account.name}
+														</span>
+														<span className={`text-xs ${
+															selectedAccounts.includes(account.id) ? 'text-blue-500' : theme.textSecondary
+														}`}>
+															• {PLATFORMS[account.platform].name}
+														</span>
+													</div>
+												</div>
+											);
+										})}
+									</div>
+								) : (
+									<div className="space-y-3">
+										{accountGroups.length === 0 ? (
+											<div className={`text-center py-8 ${theme.textSecondary}`}>
+												<p>No account groups yet</p>
+												<p className="text-sm mt-2">Select multiple accounts and save them as a group</p>
+											</div>
+										) : (
+											accountGroups.map((group) => {
+												const groupAccounts = getAccountsForGroup(group);
+												return (
+													<div
+														key={group.id}
+														className={`p-4 rounded-lg border cursor-pointer transition-all ${
+															group.accountIds.every(id => selectedAccounts.includes(id)) &&
+															selectedAccounts.every(id => group.accountIds.includes(id))
+																? `border-blue-500 bg-blue-50 dark:bg-blue-900/20`
+																: `${theme.border} ${theme.card} hover:border-opacity-50`
+														}`}
+														onClick={() => selectGroup(group)}
+													>
+														<div className="flex items-center justify-between">
+															<div>
+																<h4 className={`font-medium ${theme.text}`}>{group.name}</h4>
+																<p className={`text-sm ${theme.textSecondary}`}>
+																	{groupAccounts.length} accounts • Created {new Date(group.createdAt).toLocaleDateString()}
+																</p>
+																<div className="flex flex-wrap gap-2 mt-2">
+																	{groupAccounts.map((account) => {
+																		const IconComponent = PLATFORMS[account.platform].icon;
+																		return (
+																			<span
+																				key={account.id}
+																				className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${theme.bg} ${theme.border} border`}
+																			>
+																				<IconComponent className="w-3 h-3" />
+																				{account.name}
+																			</span>
+																		);
+																	})}
+																</div>
+															</div>
+															<button
+																type="button"
+																onClick={(e) => {
+																	e.stopPropagation();
+																	deleteGroup(group.id);
+																}}
+																className={`p-2 rounded-lg ${theme.bg} ${theme.textSecondary} hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 transition-colors`}
+															>
+																<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																	<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+																</svg>
+															</button>
+														</div>
+													</div>
+												);
+											})
+										)}
+									</div>
+								)}
 							</div>
 
 							{/* Content Editor */}
@@ -476,6 +626,56 @@ function CreatePost() {
 					</div>
 				</div>
 			</div>
+
+			{/* Group Creation Modal */}
+			{showGroupModal && (
+				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+					<div className={`w-full max-w-md p-6 rounded-lg ${theme.card} ${theme.border} border mx-4`}>
+						<h3 className={`text-lg font-semibold ${theme.text} mb-4`}>
+							Create Account Group
+						</h3>
+						<p className={`${theme.textSecondary} mb-4`}>
+							Grouping {selectedAccounts.length} accounts
+						</p>
+						<input
+							type="text"
+							value={groupName}
+							onChange={(e) => setGroupName(e.target.value)}
+							placeholder="Enter group name..."
+							className={`w-full p-3 rounded-lg ${theme.input} ${theme.inputText} ${theme.inputBorder} border focus:outline-none focus:ring-2 ${theme.inputFocusRing} focus:border-transparent mb-4`}
+							autoFocus
+							onKeyDown={(e) => {
+								if (e.key === 'Enter') {
+									saveAsGroup();
+								} else if (e.key === 'Escape') {
+									setShowGroupModal(false);
+									setGroupName('');
+								}
+							}}
+						/>
+						<div className="flex gap-3 justify-end">
+							<button
+								type="button"
+								onClick={() => {
+									setShowGroupModal(false);
+									setGroupName('');
+								}}
+								className={`px-4 py-2 rounded-lg ${theme.card} ${theme.border} border ${theme.text} hover:${theme.bg} transition-colors`}
+							>
+								Cancel
+							</button>
+							<button
+								type="button"
+								onClick={saveAsGroup}
+								disabled={!groupName.trim()}
+								className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+							>
+								Save Group
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }
