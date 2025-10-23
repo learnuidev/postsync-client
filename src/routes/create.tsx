@@ -92,6 +92,11 @@ function CreatePost() {
 	const [videoFrames, setVideoFrames] = useState<string[]>([]);
 	const [selectedFrameIndex, setSelectedFrameIndex] = useState<number>(0);
 	const [isLoadingFrames, setIsLoadingFrames] = useState<boolean>(false);
+	
+	// Image upload state
+	const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+	const [imageFiles, setImageFiles] = useState<File[]>([]);
+	const [imageAction, setImageAction] = useState<"change" | null>(null);
 
 	// Account groups state
 	const [accountGroups, setAccountGroups] = useState<AccountGroup[]>([]);
@@ -339,6 +344,42 @@ function CreatePost() {
 
 	const setCustomCoverImage = () => {
 		setVideoAction("custom-cover");
+	};
+	
+	const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+		const files = event.target.files;
+		if (files && files.length > 0) {
+			const newFiles = Array.from(files);
+			const newImageUrls: string[] = [];
+			
+			newFiles.forEach((file) => {
+				if (file.type.startsWith("image/")) {
+					const reader = new FileReader();
+					reader.onload = (e) => {
+						const imageUrl = e.target?.result as string;
+						newImageUrls.push(imageUrl);
+						
+						// Update state when all files are processed
+						if (newImageUrls.length === newFiles.length) {
+							setUploadedImages(prev => [...prev, ...newImageUrls]);
+							setImageFiles(prev => [...prev, ...newFiles]);
+						}
+					};
+					reader.readAsDataURL(file);
+				}
+			});
+			
+			setImageAction(null); // Reset action when new images are uploaded
+		}
+	};
+	
+	const changeImages = () => {
+		setImageAction("change");
+	};
+	
+	const removeImage = (index: number) => {
+		setUploadedImages(prev => prev.filter((_, i) => i !== index));
+		setImageFiles(prev => prev.filter((_, i) => i !== index));
 	};
 
 	const handleCreatePost = () => {
@@ -755,31 +796,127 @@ function CreatePost() {
 								)}
 								{postType === "image" && (
 									<div>
+										{/* Image Upload Area */}
+										<div
+											className={`border-2 border-dashed ${theme.inputBorder} rounded-lg p-8 text-center mb-4 relative overflow-hidden`}
+										>
+											{uploadedImages.length === 0 ? (
+												<label className="cursor-pointer block">
+													<input
+														type="file"
+														accept="image/*"
+														multiple
+														onChange={handleImageUpload}
+														className="hidden"
+													/>
+													<div className="space-y-4">
+														<Image
+															className={`w-12 h-12 ${theme.textSecondary} mx-auto mb-4`}
+														/>
+														<p className={`${theme.textSecondary} mb-2`}>
+															Click to upload or drag and drop
+														</p>
+														<p className={`text-sm ${theme.textSecondary}`}>
+															SVG, PNG, JPG or GIF (max. 800x400px)
+														</p>
+														<p className={`text-xs ${theme.textMuted}`}>
+															You can upload multiple images
+														</p>
+														<span className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+															Select Images
+														</span>
+													</div>
+												</label>
+											) : (
+												<div className="space-y-6">
+													<div className="flex items-center justify-center">
+														<Image
+															className={`w-8 h-8 ${theme.textSecondary} mr-2`}
+														/>
+														<span className={`${theme.text} font-medium`}>
+															{uploadedImages.length} image{uploadedImages.length !== 1 ? "s" : ""} uploaded
+														</span>
+													</div>
+													
+													{/* Image Grid Preview */}
+													<div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+														{uploadedImages.map((image, index) => (
+															<div key={index} className="relative group">
+																<img
+																	src={image}
+																	alt={`Uploaded image ${index + 1}`}
+																	className="w-full h-32 object-cover rounded-lg"
+																/>
+																<button
+																	type="button"
+																	onClick={() => removeImage(index)}
+																	className="absolute top-2 right-2 p-1 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+																>
+																	<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																		<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+																	</svg>
+																</button>
+																<div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+																	{imageFiles[index]?.name || `Image ${index + 1}`}
+																</div>
+															</div>
+														))}
+														{/* Add More Images Button */}
+														<label className="block">
+															<input
+																type="file"
+																accept="image/*"
+																multiple
+																onChange={handleImageUpload}
+																className="hidden"
+															/>
+															<div className="w-full h-32 rounded-lg border-2 border-dashed ${theme.inputBorder} flex flex-col items-center justify-center cursor-pointer hover:${theme.bg} transition-colors">
+																<Image className={`w-8 h-8 ${theme.textSecondary} mb-2`} />
+																<span className={`text-sm ${theme.textSecondary}`}>
+																	Add More Images
+																</span>
+															</div>
+														</label>
+													</div>
+													
+													{/* Action Buttons */}
+													<div className="flex gap-3 justify-center">
+														<button
+															type="button"
+															onClick={changeImages}
+															className={`px-4 py-2 ${theme.card} ${theme.border} border rounded-lg hover:${theme.bg} transition-colors ${theme.text}`}
+														>
+															Change Images
+														</button>
+													</div>
+													
+													{imageAction === 'change' && (
+														<div className={`p-4 ${theme.bg} rounded-lg`}>
+															<label className="block">
+																<input
+																	type="file"
+																	accept="image/*"
+																	multiple
+																	onChange={handleImageUpload}
+																	className="hidden"
+																/>
+																<span className="block text-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
+																	Choose New Images
+																</span>
+															</label>
+														</div>
+													)}
+												</div>
+											)}
+										</div>
+
+										{/* Caption */}
 										<textarea
 											value={content}
 											onChange={(e) => setContent(e.target.value)}
 											placeholder="Write your caption here..."
 											className={`w-full p-4 rounded-lg ${theme.input} ${theme.inputText} ${theme.inputBorder} border focus:outline-none focus:ring-2 ${theme.inputFocusRing} focus:border-transparent min-h-[100px] mb-4`}
 										/>
-										<div
-											className={`border-2 border-dashed ${theme.inputBorder} rounded-lg p-8 text-center`}
-										>
-											<Image
-												className={`w-12 h-12 ${theme.textSecondary} mx-auto mb-4`}
-											/>
-											<p className={`${theme.textSecondary} mb-2`}>
-												Click to upload or drag and drop
-											</p>
-											<p className={`text-sm ${theme.textSecondary}`}>
-												SVG, PNG, JPG or GIF (max. 800x400px)
-											</p>
-											<button
-												type="button"
-												className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-											>
-												Select Image
-											</button>
-										</div>
 									</div>
 								)}
 								{postType === "video" && (
@@ -1081,6 +1218,45 @@ function CreatePost() {
 													✓ Cover image set for video
 												</p>
 											)}
+										</div>
+									)}
+								</div>
+							)}
+							
+							{/* Image Preview */}
+							{postType === "image" && uploadedImages.length > 0 && (
+								<div
+									className={`p-4 ${theme.card} rounded-lg border ${theme.border} mb-6`}
+								>
+									<h3 className={`font-semibold ${theme.text} mb-4`}>
+										Image Preview{uploadedImages.length > 1 ? "s" : ""}
+									</h3>
+									
+									{/* Image Gallery */}
+									<div className="space-y-3">
+										{uploadedImages.map((image, index) => (
+											<div key={index} className="relative rounded-lg overflow-hidden">
+												<img
+													src={image}
+													alt={`Image ${index + 1}`}
+													className="w-full h-48 object-cover"
+												/>
+												<div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+													{imageFiles[index]?.name || `Image ${index + 1}`}
+												</div>
+												<div className="absolute top-2 right-2">
+													<span className="text-xs bg-black bg-opacity-50 text-white px-2 py-1 rounded">
+														{index + 1}/{uploadedImages.length}
+													</span>
+												</div>
+											</div>
+										))}
+									</div>
+									
+									{imageFiles.length > 0 && (
+										<div className={`text-sm ${theme.textSecondary} mt-3`}>
+											<p>Total: {imageFiles.length} image{imageFiles.length !== 1 ? "s" : ""}</p>
+											<p>Total size: {(imageFiles.reduce((sum, file) => sum + file.size, 0) / 1024 / 1024).toFixed(2)} MB</p>
 										</div>
 									)}
 								</div>
