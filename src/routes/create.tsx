@@ -60,7 +60,7 @@ function CreatePost() {
 	const timeId = useId();
 
 	const [postType, setPostType] = useState<PostType | null>(null);
-	const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>([]);
+	const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
 	const [content, setContent] = useState("");
 	const [isScheduled, setIsScheduled] = useState(false);
 	const [scheduleDate, setScheduleDate] = useState("");
@@ -71,6 +71,8 @@ function CreatePost() {
 		{ id: "1", name: "John Doe", platform: "facebook" },
 		{ id: "2", name: "John Professional", platform: "linkedin" },
 		{ id: "3", name: "@johndoe", platform: "twitter" },
+		{ id: "4", name: "@johnthreads", platform: "threads" },
+		{ id: "5", name: "John Creator", platform: "tiktok" },
 	]);
 
 	useEffect(() => {
@@ -79,31 +81,23 @@ function CreatePost() {
 		}
 	}, [user, router]);
 
-	const getPlatformsForPostType = (type: PostType): Platform[] => {
-		switch (type) {
-			case "text":
-				return ["facebook", "linkedin", "threads", "twitter"];
-			case "video":
-				return [
-					"facebook",
-					"linkedin",
-					"threads",
-					"twitter",
-					"tiktok",
-					"youtube",
-				];
-			case "image":
-				return ["facebook", "linkedin", "threads", "twitter", "tiktok"];
-			default:
-				return [];
-		}
+	const getAccountsForPostType = (type: PostType): SocialAccount[] => {
+		const supportedPlatforms = {
+			text: ["facebook", "linkedin", "threads", "twitter"],
+			video: ["facebook", "linkedin", "threads", "twitter", "tiktok", "youtube"],
+			image: ["facebook", "linkedin", "threads", "twitter", "tiktok"],
+		} as const;
+		
+		return connectedAccounts.filter((account) => 
+			supportedPlatforms[type]?.includes(account.platform)
+		);
 	};
 
-	const togglePlatform = (platform: Platform) => {
-		if (selectedPlatforms.includes(platform)) {
-			setSelectedPlatforms(selectedPlatforms.filter((p) => p !== platform));
+	const toggleAccount = (accountId: string) => {
+		if (selectedAccounts.includes(accountId)) {
+			setSelectedAccounts(selectedAccounts.filter((id) => id !== accountId));
 		} else {
-			setSelectedPlatforms([...selectedPlatforms, platform]);
+			setSelectedAccounts([...selectedAccounts, accountId]);
 		}
 	};
 
@@ -113,7 +107,7 @@ function CreatePost() {
 
 	const handlePostTypeSelect = (type: PostType) => {
 		setPostType(type);
-		setSelectedPlatforms([]);
+		setSelectedAccounts([]);
 	};
 
 	const handleCreatePost = () => {
@@ -279,34 +273,51 @@ function CreatePost() {
 								</h1>
 							</div>
 
-							{/* Platform Selection */}
+							{/* Connected Accounts Selection */}
 							<div
 								className={`mb-8 p-4 ${theme.card} rounded-lg border ${theme.border}`}
 							>
 								<h3 className={`font-semibold ${theme.text} mb-4`}>
-									Select Platforms
+									Connected Accounts
 								</h3>
-								<div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-									{getPlatformsForPostType(postType).map((platform) => {
-										const IconComponent = PLATFORMS[platform].icon;
+								<div className="space-y-3">
+									{getAccountsForPostType(postType).map((account) => {
+										const IconComponent = PLATFORMS[account.platform].icon;
 										return (
-											<button
-												type="button"
-												key={platform}
-												onClick={() => togglePlatform(platform)}
-												className={`p-3 rounded-lg border flex items-center gap-2 transition-all ${
-													selectedPlatforms.includes(platform)
+											<div
+												key={account.id}
+												className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${
+													selectedAccounts.includes(account.id)
 														? `border-blue-500 bg-blue-50 dark:bg-blue-900/20`
 														: `${theme.border} ${theme.card}`
 												}`}
+												onClick={() => toggleAccount(account.id)}
 											>
-												<span className="text-lg">
-													<IconComponent className="w-5 h-5" />
-												</span>
-												<span className={`text-sm ${theme.text}`}>
-													{PLATFORMS[platform].name}
-												</span>
-											</button>
+												<div className="flex items-center gap-3">
+													<div className="text-lg">
+														<IconComponent className="w-5 h-5" />
+													</div>
+													<div>
+														<p className={`text-sm font-medium ${theme.text}`}>
+															{account.name}
+														</p>
+														<p className={`text-xs ${theme.textSecondary}`}>
+															{PLATFORMS[account.platform].name}
+														</p>
+													</div>
+												</div>
+												<div className={`w-4 h-4 rounded-full border-2 ${
+													selectedAccounts.includes(account.id)
+														? 'bg-blue-500 border-blue-500'
+														: `${theme.border}`
+												}`}>
+													{selectedAccounts.includes(account.id) && (
+														<svg className="w-full h-full text-white p-0.5" viewBox="0 0 20 20" fill="currentColor">
+															<path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+														</svg>
+													)}
+												</div>
+											</div>
 										);
 									})}
 								</div>
@@ -388,48 +399,6 @@ function CreatePost() {
 
 						{/* Sidebar - 1 column */}
 						<div className="lg:col-span-1">
-							{/* Connected Accounts */}
-							<div
-								className={`p-4 ${theme.card} rounded-lg border ${theme.border} mb-6`}
-							>
-								<h3 className={`font-semibold ${theme.text} mb-4`}>
-									Connected Accounts
-								</h3>
-								<div className="space-y-3">
-									{connectedAccounts.map((account) => {
-										const IconComponent = PLATFORMS[account.platform].icon;
-										return (
-											<div
-												key={account.id}
-												className={`flex items-center justify-between p-3 rounded-lg ${theme.bg}`}
-											>
-												<div className="flex items-center gap-3">
-													<div className="text-lg">
-														<IconComponent className="w-5 h-5" />
-													</div>
-													<div>
-														<p className={`text-sm font-medium ${theme.text}`}>
-															{account.name}
-														</p>
-														<p className={`text-xs ${theme.textSecondary}`}>
-															{PLATFORMS[account.platform].name}
-														</p>
-													</div>
-												</div>
-												<button
-													type="button"
-													className={`text-xs ${theme.link} ${theme.linkHover}`}
-													onClick={() => togglePlatform(account.platform)}
-												>
-													{selectedPlatforms.includes(account.platform)
-														? "Selected"
-														: "Select"}
-												</button>
-											</div>
-										);
-									})}
-								</div>
-							</div>
 
 							{/* Schedule Options */}
 							<div
@@ -497,11 +466,11 @@ function CreatePost() {
 							<button
 								type="button"
 								onClick={handleCreatePost}
-								disabled={!selectedPlatforms.length || !content.trim()}
+								disabled={!selectedAccounts.length || !content.trim()}
 								className="w-full mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
 							>
-								Post to {selectedPlatforms.length} platform
-								{selectedPlatforms.length !== 1 && "s"}
+								Post to {selectedAccounts.length} account
+								{selectedAccounts.length !== 1 && "s"}
 							</button>
 						</div>
 					</div>
