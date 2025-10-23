@@ -1,9 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import { BarChart3, Home, LogIn, LogOut } from "lucide-react";
+import { BarChart3, Home, LogIn, LogOut, Calendar, Settings } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
+import { useTheme } from "../contexts/ThemeContext";
 
 export default function BottomNav() {
 	const { user, logout } = useAuth();
+	const { theme } = useTheme();
 
 	// Only show bottom navigation if user is logged in
 	if (!user) {
@@ -38,14 +40,27 @@ export default function BottomNav() {
 							<span>Dashboard</span>
 						</Link>
 
-						<button
-							type="button"
-							onClick={logout}
-							className="flex items-center gap-2 text-gray-600 hover:text-red-600 transition-colors"
+						<Link
+							to="/app/calendar"
+							className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors"
+							activeProps={{
+								className: "flex items-center gap-2 text-blue-600",
+							}}
 						>
-							<LogOut size={20} />
-							<span>Logout</span>
-						</button>
+							<Calendar size={20} />
+							<span>Calendar</span>
+						</Link>
+
+						<Link
+							to="/app/settings"
+							className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors"
+							activeProps={{
+								className: "flex items-center gap-2 text-blue-600",
+							}}
+						>
+							<Settings size={20} />
+							<span>Settings</span>
+						</Link>
 					</div>
 				</div>
 			</nav>
@@ -68,22 +83,34 @@ export default function BottomNav() {
 						to="/app"
 						className="flex flex-col items-center gap-1 p-2 text-gray-600 hover:text-blue-600 transition-colors"
 						activeProps={{
-							className:
-								"flex flex-col items-center gap-1 p-2 text-blue-600",
+							className: "flex flex-col items-center gap-1 p-2 text-blue-600",
 						}}
 					>
 						<BarChart3 size={20} />
 						<span className="text-xs">Dashboard</span>
 					</Link>
 
-					<button
-						type="button"
-						onClick={logout}
-						className="flex flex-col items-center gap-1 p-2 text-gray-600 hover:text-red-600 transition-colors"
+					<Link
+						to="/app/calendar"
+						className="flex flex-col items-center gap-1 p-2 text-gray-600 hover:text-blue-600 transition-colors"
+						activeProps={{
+							className: "flex flex-col items-center gap-1 p-2 text-blue-600",
+						}}
 					>
-						<LogOut size={20} />
-						<span className="text-xs">Logout</span>
-					</button>
+						<Calendar size={20} />
+						<span className="text-xs">Calendar</span>
+					</Link>
+
+					<Link
+						to="/app/settings"
+						className="flex flex-col items-center gap-1 p-2 text-gray-600 hover:text-blue-600 transition-colors"
+						activeProps={{
+							className: "flex flex-col items-center gap-1 p-2 text-blue-600",
+						}}
+					>
+						<Settings size={20} />
+						<span className="text-xs">Settings</span>
+					</Link>
 				</div>
 			</nav>
 		</>
