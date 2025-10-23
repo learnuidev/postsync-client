@@ -3,8 +3,22 @@ import {
 	useNavigate,
 	useRouter,
 } from "@tanstack/react-router";
-import { ArrowLeft, Image, Share, Text, Video } from "lucide-react";
+import {
+	ArrowLeft,
+	Facebook,
+	Image,
+	Linkedin,
+	Share,
+	Text,
+	// TwitterIcon as Threads,
+	// TwitterIcon as TikTok,
+	Twitter,
+	Video,
+	Youtube,
+} from "lucide-react";
 import { useEffect, useId, useState } from "react";
+import { ThreadsIcon } from "@/components/icons/threads-icon";
+import { TikTokIcon } from "@/components/icons/tiktok-icon";
 import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../hooks/useAuth";
 
@@ -29,12 +43,12 @@ interface SocialAccount {
 }
 
 const PLATFORMS = {
-	facebook: { name: "Facebook", icon: "📘" },
-	linkedin: { name: "LinkedIn", icon: "💼" },
-	threads: { name: "Threads", icon: "🧵" },
-	twitter: { name: "Twitter", icon: "🐦" },
-	tiktok: { name: "TikTok", icon: "🎵" },
-	youtube: { name: "YouTube", icon: "📹" },
+	facebook: { name: "Facebook", icon: Facebook },
+	linkedin: { name: "LinkedIn", icon: Linkedin },
+	threads: { name: "Threads", icon: ThreadsIcon },
+	twitter: { name: "Twitter", icon: Twitter },
+	tiktok: { name: "TikTok", icon: TikTokIcon },
+	youtube: { name: "YouTube", icon: Youtube },
 };
 
 function CreatePost() {
@@ -57,7 +71,7 @@ function CreatePost() {
 		{ id: "1", name: "John Doe", platform: "facebook" },
 		{ id: "2", name: "John Professional", platform: "linkedin" },
 		{ id: "3", name: "@johndoe", platform: "twitter" },
-	])
+	]);
 
 	useEffect(() => {
 		if (!user) {
@@ -77,13 +91,13 @@ function CreatePost() {
 					"twitter",
 					"tiktok",
 					"youtube",
-				]
+				];
 			case "image":
 				return ["facebook", "linkedin", "threads", "twitter", "tiktok"];
 			default:
-				return []
+				return [];
 		}
-	}
+	};
 
 	const togglePlatform = (platform: Platform) => {
 		if (selectedPlatforms.includes(platform)) {
@@ -91,22 +105,22 @@ function CreatePost() {
 		} else {
 			setSelectedPlatforms([...selectedPlatforms, platform]);
 		}
-	}
+	};
 
 	const handleBack = () => {
 		navigate({ to: "/app" });
-	}
+	};
 
 	const handlePostTypeSelect = (type: PostType) => {
 		setPostType(type);
 		setSelectedPlatforms([]);
-	}
+	};
 
 	const handleCreatePost = () => {
 		// Here you would implement the actual post creation logic
 		alert("Post created successfully!");
 		navigate({ to: "/app" });
-	}
+	};
 
 	if (!postType) {
 		return (
@@ -147,11 +161,15 @@ function CreatePost() {
 										</p>
 										<div className="flex justify-center gap-2 mt-4">
 											{["facebook", "linkedin", "threads", "twitter"].map(
-												(platform) => (
-													<span key={platform} className="text-lg">
-														{PLATFORMS[platform as Platform].icon}
-													</span>
-												),
+												(platform) => {
+													const IconComponent =
+														PLATFORMS[platform as Platform].icon;
+													return (
+														<span key={platform} className="text-lg">
+															<IconComponent className="w-5 h-5" />
+														</span>
+													);
+												},
 											)}
 										</div>
 									</div>
@@ -182,11 +200,15 @@ function CreatePost() {
 												"twitter",
 												"tiktok",
 												"youtube",
-											].map((platform) => (
-												<span key={platform} className="text-lg">
-													{PLATFORMS[platform as Platform].icon}
-												</span>
-											))}
+											].map((platform) => {
+												const IconComponent =
+													PLATFORMS[platform as Platform].icon;
+												return (
+													<span key={platform} className="text-lg">
+														<IconComponent className="w-5 h-5" />
+													</span>
+												);
+											})}
 										</div>
 									</div>
 								</div>
@@ -215,11 +237,15 @@ function CreatePost() {
 												"threads",
 												"twitter",
 												"tiktok",
-											].map((platform) => (
-												<span key={platform} className="text-lg">
-													{PLATFORMS[platform as Platform].icon}
-												</span>
-											))}
+											].map((platform) => {
+												const IconComponent =
+													PLATFORMS[platform as Platform].icon;
+												return (
+													<span key={platform} className="text-lg">
+														<IconComponent className="w-5 h-5" />
+													</span>
+												);
+											})}
 										</div>
 									</div>
 								</div>
@@ -228,7 +254,7 @@ function CreatePost() {
 					</div>
 				</div>
 			</div>
-		)
+		);
 	}
 
 	return (
@@ -261,25 +287,28 @@ function CreatePost() {
 									Select Platforms
 								</h3>
 								<div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-									{getPlatformsForPostType(postType).map((platform) => (
-										<button
-											type="button"
-											key={platform}
-											onClick={() => togglePlatform(platform)}
-											className={`p-3 rounded-lg border flex items-center gap-2 transition-all ${
-												selectedPlatforms.includes(platform)
-													? `border-blue-500 bg-blue-50 dark:bg-blue-900/20`
-													: "${theme.border} ${theme.card}"
-											}`}
-										>
-											<span className="text-lg">
-												{PLATFORMS[platform].icon}
-											</span>
-											<span className={`text-sm ${theme.text}`}>
-												{PLATFORMS[platform].name}
-											</span>
-										</button>
-									))}
+									{getPlatformsForPostType(postType).map((platform) => {
+										const IconComponent = PLATFORMS[platform].icon;
+										return (
+											<button
+												type="button"
+												key={platform}
+												onClick={() => togglePlatform(platform)}
+												className={`p-3 rounded-lg border flex items-center gap-2 transition-all ${
+													selectedPlatforms.includes(platform)
+														? `border-blue-500 bg-blue-50 dark:bg-blue-900/20`
+														: `${theme.border} ${theme.card}`
+												}`}
+											>
+												<span className="text-lg">
+													<IconComponent className="w-5 h-5" />
+												</span>
+												<span className={`text-sm ${theme.text}`}>
+													{PLATFORMS[platform].name}
+												</span>
+											</button>
+										);
+									})}
 								</div>
 							</div>
 
@@ -367,35 +396,38 @@ function CreatePost() {
 									Connected Accounts
 								</h3>
 								<div className="space-y-3">
-									{connectedAccounts.map((account) => (
-										<div
-											key={account.id}
-											className={`flex items-center justify-between p-3 rounded-lg ${theme.bg}`}
-										>
-											<div className="flex items-center gap-3">
-												<div className="text-lg">
-													{PLATFORMS[account.platform].icon}
-												</div>
-												<div>
-													<p className={`text-sm font-medium ${theme.text}`}>
-														{account.name}
-													</p>
-													<p className={`text-xs ${theme.textSecondary}`}>
-														{PLATFORMS[account.platform].name}
-													</p>
-												</div>
-											</div>
-											<button
-												type="button"
-												className={`text-xs ${theme.link} ${theme.linkHover}`}
-												onClick={() => togglePlatform(account.platform)}
+									{connectedAccounts.map((account) => {
+										const IconComponent = PLATFORMS[account.platform].icon;
+										return (
+											<div
+												key={account.id}
+												className={`flex items-center justify-between p-3 rounded-lg ${theme.bg}`}
 											>
-												{selectedPlatforms.includes(account.platform)
-													? "Selected"
-													: "Select"}
-											</button>
-										</div>
-									))}
+												<div className="flex items-center gap-3">
+													<div className="text-lg">
+														<IconComponent className="w-5 h-5" />
+													</div>
+													<div>
+														<p className={`text-sm font-medium ${theme.text}`}>
+															{account.name}
+														</p>
+														<p className={`text-xs ${theme.textSecondary}`}>
+															{PLATFORMS[account.platform].name}
+														</p>
+													</div>
+												</div>
+												<button
+													type="button"
+													className={`text-xs ${theme.link} ${theme.linkHover}`}
+													onClick={() => togglePlatform(account.platform)}
+												>
+													{selectedPlatforms.includes(account.platform)
+														? "Selected"
+														: "Select"}
+												</button>
+											</div>
+										);
+									})}
 								</div>
 							</div>
 
@@ -476,5 +508,5 @@ function CreatePost() {
 				</div>
 			</div>
 		</div>
-	)
+	);
 }
