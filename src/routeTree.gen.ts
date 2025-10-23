@@ -10,12 +10,12 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as CreateRouteImport } from './routes/create'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DemoTanstackQueryRouteImport } from './routes/demo/tanstack-query'
 import { Route as DemoTableRouteImport } from './routes/demo/table'
 import { Route as DemoStoreRouteImport } from './routes/demo/store'
-import { Route as AppCreateRouteImport } from './routes/app/create'
 import { Route as DemoStartServerFuncsRouteImport } from './routes/demo/start.server-funcs'
 import { Route as DemoStartApiRequestRouteImport } from './routes/demo/start.api-request'
 import { Route as DemoFormSimpleRouteImport } from './routes/demo/form.simple'
@@ -30,6 +30,11 @@ import { Route as DemoStartSsrDataOnlyRouteImport } from './routes/demo/start.ss
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreateRoute = CreateRouteImport.update({
+  id: '/create',
+  path: '/create',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRoute = AppRouteImport.update({
@@ -56,11 +61,6 @@ const DemoStoreRoute = DemoStoreRouteImport.update({
   id: '/demo/store',
   path: '/demo/store',
   getParentRoute: () => rootRouteImport,
-} as any)
-const AppCreateRoute = AppCreateRouteImport.update({
-  id: '/create',
-  path: '/create',
-  getParentRoute: () => AppRoute,
 } as any)
 const DemoStartServerFuncsRoute = DemoStartServerFuncsRouteImport.update({
   id: '/demo/start/server-funcs',
@@ -115,9 +115,9 @@ const DemoStartSsrDataOnlyRoute = DemoStartSsrDataOnlyRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/app': typeof AppRouteWithChildren
+  '/app': typeof AppRoute
+  '/create': typeof CreateRoute
   '/login': typeof LoginRoute
-  '/app/create': typeof AppCreateRoute
   '/demo/store': typeof DemoStoreRoute
   '/demo/table': typeof DemoTableRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
@@ -134,9 +134,9 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/app': typeof AppRouteWithChildren
+  '/app': typeof AppRoute
+  '/create': typeof CreateRoute
   '/login': typeof LoginRoute
-  '/app/create': typeof AppCreateRoute
   '/demo/store': typeof DemoStoreRoute
   '/demo/table': typeof DemoTableRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
@@ -154,9 +154,9 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/app': typeof AppRouteWithChildren
+  '/app': typeof AppRoute
+  '/create': typeof CreateRoute
   '/login': typeof LoginRoute
-  '/app/create': typeof AppCreateRoute
   '/demo/store': typeof DemoStoreRoute
   '/demo/table': typeof DemoTableRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
@@ -176,8 +176,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/app'
+    | '/create'
     | '/login'
-    | '/app/create'
     | '/demo/store'
     | '/demo/table'
     | '/demo/tanstack-query'
@@ -195,8 +195,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/app'
+    | '/create'
     | '/login'
-    | '/app/create'
     | '/demo/store'
     | '/demo/table'
     | '/demo/tanstack-query'
@@ -214,8 +214,8 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/app'
+    | '/create'
     | '/login'
-    | '/app/create'
     | '/demo/store'
     | '/demo/table'
     | '/demo/tanstack-query'
@@ -233,7 +233,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AppRoute: typeof AppRouteWithChildren
+  AppRoute: typeof AppRoute
+  CreateRoute: typeof CreateRoute
   LoginRoute: typeof LoginRoute
   DemoStoreRoute: typeof DemoStoreRoute
   DemoTableRoute: typeof DemoTableRoute
@@ -257,6 +258,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/create': {
+      id: '/create'
+      path: '/create'
+      fullPath: '/create'
+      preLoaderRoute: typeof CreateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app': {
@@ -293,13 +301,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/demo/store'
       preLoaderRoute: typeof DemoStoreRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/app/create': {
-      id: '/app/create'
-      path: '/create'
-      fullPath: '/app/create'
-      preLoaderRoute: typeof AppCreateRouteImport
-      parentRoute: typeof AppRoute
     }
     '/demo/start/server-funcs': {
       id: '/demo/start/server-funcs'
@@ -374,19 +375,10 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AppRouteChildren {
-  AppCreateRoute: typeof AppCreateRoute
-}
-
-const AppRouteChildren: AppRouteChildren = {
-  AppCreateRoute: AppCreateRoute,
-}
-
-const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AppRoute: AppRouteWithChildren,
+  AppRoute: AppRoute,
+  CreateRoute: CreateRoute,
   LoginRoute: LoginRoute,
   DemoStoreRoute: DemoStoreRoute,
   DemoTableRoute: DemoTableRoute,

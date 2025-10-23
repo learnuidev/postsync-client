@@ -3,12 +3,12 @@ import {
 	useNavigate,
 	useRouter,
 } from "@tanstack/react-router";
-import { ArrowLeft, Image, Text, Video } from "lucide-react";
+import { ArrowLeft, Image, Share, Text, Video } from "lucide-react";
 import { useEffect, useId, useState } from "react";
-import { useTheme } from "../../contexts/ThemeContext";
-import { useAuth } from "../../hooks/useAuth";
+import { useTheme } from "../contexts/ThemeContext";
+import { useAuth } from "../hooks/useAuth";
 
-export const Route = createFileRoute("/app/create")({
+export const Route = createFileRoute("/create")({
 	component: CreatePost,
 });
 
