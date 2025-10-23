@@ -77,6 +77,15 @@ function CreatePost() {
 	const [customCaptions, setCustomCaptions] = useState<Record<string, string>>({});
 	const [useCustomCaptions, setUseCustomCaptions] = useState(false);
 	
+	// Video upload state
+	const [uploadedVideo, setUploadedVideo] = useState<string | null>(null);
+	const [videoFile, setVideoFile] = useState<File | null>(null);
+	
+	// Video cover image state
+	const [coverImage, setCoverImage] = useState<string | null>(null);
+	const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+	const [videoAction, setVideoAction] = useState<'change' | 'set-cover' | 'custom-cover' | null>(null);
+	
 	// Account groups state
 	const [accountGroups, setAccountGroups] = useState<AccountGroup[]>([]);
 	const [activeTab, setActiveTab] = useState<'accounts' | 'groups'>('accounts');
@@ -190,6 +199,69 @@ function CreatePost() {
 			...prev,
 			[accountId]: caption
 		}));
+	};
+	
+	const handleVideoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+		const file = event.target.files?.[0];
+		if (file && file.type.startsWith('video/')) {
+			setVideoFile(file);
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				const videoSrc = e.target?.result as string;
+				setUploadedVideo(videoSrc);
+				
+				// Extract first frame from video to use as default cover
+				extractVideoFrame(videoSrc, (frameSrc) => {
+					setCoverImage(frameSrc);
+				});
+			};
+			reader.readAsDataURL(file);
+			setVideoAction(null); // Reset action when new video is uploaded
+		}
+	};
+	
+	const handleCoverImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+		const file = event.target.files?.[0];
+		if (file && file.type.startsWith('image/')) {
+			setCoverImageFile(file);
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				setCoverImage(e.target?.result as string);
+			};
+			reader.readAsDataURL(file);
+		}
+	};
+	
+	const extractVideoFrame = (videoSrc: string, callback: (frameSrc: string) => void) => {
+		const video = document.createElement('video');
+		video.src = videoSrc;
+		video.currentTime = 0.1; // Capture frame after 0.1 seconds
+		video.onloadeddata = () => {
+			const canvas = document.createElement('canvas');
+			const ctx = canvas.getContext('2d');
+			canvas.width = video.videoWidth;
+			canvas.height = video.videoHeight;
+			ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
+			const frameSrc = canvas.toDataURL('image/jpeg', 0.8);
+			callback(frameSrc);
+		};
+	};
+	
+	const changeVideo = () => {
+		setVideoAction('change');
+	};
+	
+	const setCoverFromVideo = () => {
+		if (uploadedVideo) {
+			extractVideoFrame(uploadedVideo, (frameSrc) => {
+				setCoverImage(frameSrc);
+			});
+			setVideoAction('set-cover');
+		}
+	};
+	
+	const setCustomCoverImage = () => {
+		setVideoAction('custom-cover');
 	};
 	
 	const handleCreatePost = () => {
@@ -578,23 +650,124 @@ function CreatePost() {
 									<div>
 										{/* Video Upload Area */}
 										<div
-											className={`border-2 border-dashed ${theme.inputBorder} rounded-lg p-8 text-center mb-4`}
+											className={`border-2 border-dashed ${theme.inputBorder} rounded-lg p-8 text-center mb-4 relative overflow-hidden`}
 										>
-											<Video
-												className={`w-12 h-12 ${theme.textSecondary} mx-auto mb-4`}
-											/>
-											<p className={`${theme.textSecondary} mb-2`}>
-												Click to upload or drag and drop
-											</p>
-											<p className={`text-sm ${theme.textSecondary}`}>
-												MP4, WebM or OGG (max. 800x400px)
-											</p>
-											<button
-												type="button"
-												className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-											>
-												Select Video
-											</button>
+											{!uploadedVideo ? (
+												<label className="cursor-pointer block">
+													<input
+														type="file"
+														accept="video/*"
+														onChange={handleVideoUpload}
+														className="hidden"
+													/>
+													<div className="space-y-4">
+														<Video
+															className={`w-12 h-12 ${theme.textSecondary} mx-auto mb-4`}
+														/>
+														<p className={`${theme.textSecondary} mb-2`}>
+															Click to upload or drag and drop
+														</p>
+														<p className={`text-sm ${theme.textSecondary}`}>
+															MP4, WebM or OGG (max. 800x400px)
+														</p>
+														<span className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+															Select Video
+														</span>
+													</div>
+												</label>
+											) : (
+												<div className="space-y-6">
+													<div className="flex items-center justify-center">
+														<Video
+															className={`w-8 h-8 ${theme.textSecondary} mr-2`}
+														/>
+														<span className={`${theme.text} font-medium`}>
+															Video uploaded successfully
+														</span>
+													</div>
+													
+													<div className="flex gap-3 justify-center">
+														<button
+															type="button"
+															onClick={changeVideo}
+															className={`px-4 py-2 ${theme.card} ${theme.border} border rounded-lg hover:${theme.bg} transition-colors ${theme.text}`}
+														>
+															Change Video
+														</button>
+														<button
+															type="button"
+															onClick={setCoverFromVideo}
+															className={`px-4 py-2 ${theme.card} ${theme.border} border rounded-lg hover:${theme.bg} transition-colors ${theme.text}`}
+														>
+															Set Cover from Video
+														</button>
+														<button
+															type="button"
+															onClick={setCustomCoverImage}
+															className={`px-4 py-2 ${theme.card} ${theme.border} border rounded-lg hover:${theme.bg} transition-colors ${theme.text}`}
+														>
+															Set Custom Cover
+														</button>
+													</div>
+													
+													{videoAction === 'change' && (
+														<div className={`p-4 ${theme.bg} rounded-lg`}>
+															<label className="block">
+																<input
+																	type="file"
+																	accept="video/*"
+																	onChange={handleVideoUpload}
+																	className="hidden"
+																/>
+																<span className="block text-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
+																	Choose New Video
+																</span>
+															</label>
+														</div>
+													)}
+													
+													{videoAction === 'set-cover' && coverImage && (
+														<div className={`p-4 ${theme.bg} rounded-lg`}>
+															<p className={`text-sm ${theme.text} mb-3`}>
+																Cover image set from video frame
+															</p>
+															<img
+																src={coverImage}
+																alt="Video cover"
+																className="w-32 h-24 object-cover rounded-lg mx-auto"
+															/>
+														</div>
+													)}
+													
+													{videoAction === 'custom-cover' && (
+														<div className={`p-4 ${theme.bg} rounded-lg`}>
+															<label className="block">
+																<input
+																	type="file"
+																	accept="image/*"
+																	onChange={handleCoverImageUpload}
+																	className="hidden"
+																/>
+																<div className="space-y-3">
+																	<p className={`text-sm ${theme.text}`}>
+																		Upload a custom cover image
+																	</p>
+																	<span className="block text-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer">
+																		Choose Image
+																	</span>
+																</div>
+															</label>
+															{coverImage && (
+																<img
+																	src={coverImage}
+																	alt="Custom cover"
+																	className="w-32 h-24 object-cover rounded-lg mx-auto mt-3"
+																/>
+															)}
+														</div>
+													)}
+												</div>
+											)}
 										</div>
 										
 										{/* Default Caption */}
@@ -666,7 +839,29 @@ function CreatePost() {
 						</div>
 
 						{/* Sidebar - 1 column */}
-						<div className="lg:col-span-1">
+						<div className="lg:col-span-1 lg:sticky lg:top-6 lg:self-start">
+							{/* Video Preview */}
+							{postType === 'video' && uploadedVideo && (
+								<div
+									className={`p-4 ${theme.card} rounded-lg border ${theme.border} mb-6`}
+								>
+									<h3 className={`font-semibold ${theme.text} mb-4`}>
+										Video Preview
+									</h3>
+									<video
+										src={uploadedVideo}
+										className="w-full rounded-lg mb-3"
+										controls
+									/>
+									{videoFile && (
+										<div className={`text-sm ${theme.textSecondary}`}>
+											<p>File: {videoFile.name}</p>
+											<p>Size: {(videoFile.size / 1024 / 1024).toFixed(2)} MB</p>
+											<p>Type: {videoFile.type}</p>
+										</div>
+									)}
+								</div>
+							)}
 
 							{/* Schedule Options */}
 							<div
