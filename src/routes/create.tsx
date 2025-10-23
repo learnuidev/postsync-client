@@ -21,19 +21,14 @@ import { ThreadsIcon } from "@/components/icons/threads-icon";
 import { TikTokIcon } from "@/components/icons/tiktok-icon";
 import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../hooks/useAuth";
+import { PostSchema, CreatePostInput, type Platform } from "../modules/post.types";
+import { useCreatePostMutation } from "../modules/create-post-mutation";
 
 export const Route = createFileRoute("/create")({
 	component: CreatePost,
 });
 
-type PostType = "text" | "video" | "image";
-type Platform =
-	| "facebook"
-	| "linkedin"
-	| "threads"
-	| "twitter"
-	| "tiktok"
-	| "youtube";
+// Types are now imported from post.types
 
 interface SocialAccount {
 	id: string;
@@ -65,6 +60,9 @@ function CreatePost() {
 	const navigate = useNavigate();
 	const dateId = useId();
 	const timeId = useId();
+	
+	// Post mutation hook
+	const createPostMutation = useCreatePostMutation();
 
 	const [postType, setPostType] = useState<PostType | null>(null);
 	const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
@@ -382,14 +380,48 @@ function CreatePost() {
 		setImageFiles(prev => prev.filter((_, i) => i !== index));
 	};
 
-	const handleCreatePost = () => {
-		// Here you would implement the actual post creation logic
-		// For now, we'll just log the caption data
-		if (useCustomCaptions && Object.keys(customCaptions).length > 0) {
-			console.log("Custom captions per account:", customCaptions);
+	const handleCreatePost = async () => {
+		// Prepare media files
+		let mediaFiles: File[] = [];
+		
+		if (postType === "video" && videoFile) {
+			mediaFiles.push(videoFile);
+		} else if (postType === "image" && imageFiles.length > 0) {
+			mediaFiles = [...imageFiles];
 		}
-		alert("Post created successfully!");
-		navigate({ to: "/app" });
+		
+		// Create post data object
+		const postData: CreatePostInput = {
+			content,
+			postType: postType!,
+			selectedAccounts,
+			customCaptions,
+			useCustomCaptions,
+			isScheduled,
+			scheduleDate: isScheduled ? scheduleDate : undefined,
+			scheduleTime: isScheduled ? scheduleTime : undefined,
+			mediaFiles: mediaFiles.length > 0 ? mediaFiles : undefined,
+			coverImage: coverImageFile || undefined,
+		};
+		
+		// Validate data with zod schema
+		const validationResult = PostSchema.safeParse(postData);
+		
+		if (!validationResult.success) {
+			console.error("Validation error:", validationResult.error);
+			alert("Please check all required fields and try again.");
+			return;
+		}
+		
+		try {
+			// Call the mutation
+			await createPostMutation.mutateAsync(validationResult.data);
+			alert("Post created successfully!");
+			navigate({ to: "/app" });
+		} catch (error) {
+			console.error("Error creating post:", error);
+			alert("Failed to create post. Please try again.");
+		}
 	};
 
 	if (!postType) {
@@ -1328,11 +1360,13 @@ function CreatePost() {
 							<button
 								type="button"
 								onClick={handleCreatePost}
-								disabled={!selectedAccounts.length || !content.trim()}
+								disabled={!selectedAccounts.length || !content.trim() || createPostMutation.isPending}
 								className="w-full mt-6 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
 							>
-								Post to {selectedAccounts.length} account
-								{selectedAccounts.length !== 1 && "s"}
+								{createPostMutation.isPending 
+									? "Creating post..." 
+									: `Post to ${selectedAccounts.length} account${selectedAccounts.length !== 1 ? "s" : ""}`
+								}
 							</button>
 						</div>
 					</div>
