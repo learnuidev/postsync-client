@@ -73,6 +73,10 @@ function CreatePost() {
 	const [scheduleDate, setScheduleDate] = useState("");
 	const [scheduleTime, setScheduleTime] = useState("");
 	
+	// Custom captions per account
+	const [customCaptions, setCustomCaptions] = useState<Record<string, string>>({});
+	const [useCustomCaptions, setUseCustomCaptions] = useState(false);
+	
 	// Account groups state
 	const [accountGroups, setAccountGroups] = useState<AccountGroup[]>([]);
 	const [activeTab, setActiveTab] = useState<'accounts' | 'groups'>('accounts');
@@ -181,8 +185,19 @@ function CreatePost() {
 		setSelectedAccounts([]);
 	};
 
+	const updateCustomCaption = (accountId: string, caption: string) => {
+		setCustomCaptions(prev => ({
+			...prev,
+			[accountId]: caption
+		}));
+	};
+	
 	const handleCreatePost = () => {
 		// Here you would implement the actual post creation logic
+		// For now, we'll just log the caption data
+		if (useCustomCaptions && Object.keys(customCaptions).length > 0) {
+			console.log('Custom captions per account:', customCaptions);
+		}
 		alert("Post created successfully!");
 		navigate({ to: "/app" });
 	};
@@ -561,14 +576,9 @@ function CreatePost() {
 								)}
 								{postType === "video" && (
 									<div>
-										<textarea
-											value={content}
-											onChange={(e) => setContent(e.target.value)}
-											placeholder="Write your caption here..."
-											className={`w-full p-4 rounded-lg ${theme.input} ${theme.inputText} ${theme.inputBorder} border focus:outline-none focus:ring-2 ${theme.inputFocusRing} focus:border-transparent min-h-[100px] mb-4`}
-										/>
+										{/* Video Upload Area */}
 										<div
-											className={`border-2 border-dashed ${theme.inputBorder} rounded-lg p-8 text-center`}
+											className={`border-2 border-dashed ${theme.inputBorder} rounded-lg p-8 text-center mb-4`}
 										>
 											<Video
 												className={`w-12 h-12 ${theme.textSecondary} mx-auto mb-4`}
@@ -586,6 +596,70 @@ function CreatePost() {
 												Select Video
 											</button>
 										</div>
+										
+										{/* Default Caption */}
+										<div className="mb-4">
+											<textarea
+												value={content}
+												onChange={(e) => setContent(e.target.value)}
+												placeholder="Write your default caption here..."
+												className={`w-full p-4 rounded-lg ${theme.input} ${theme.inputText} ${theme.inputBorder} border focus:outline-none focus:ring-2 ${theme.inputFocusRing} focus:border-transparent min-h-[100px]`}
+											/>
+										</div>
+										
+										{/* Custom Captions Option */}
+										{selectedAccounts.length > 0 && (
+											<div className={`mb-4 p-4 ${theme.card} rounded-lg border ${theme.border}`}>
+												<div className="flex items-center justify-between mb-3">
+													<label className={`font-medium ${theme.text}`}>
+														Custom Captions per Account
+													</label>
+													<button
+														type="button"
+														onClick={() => setUseCustomCaptions(!useCustomCaptions)}
+														className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+															useCustomCaptions
+																? `bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300`
+																: `${theme.card} ${theme.border} border ${theme.textSecondary} hover:${theme.bg}`
+														}`}
+													>
+														{useCustomCaptions ? 'Enabled' : 'Enable'}
+													</button>
+												</div>
+												
+												{useCustomCaptions && (
+													<div className="space-y-3">
+														{selectedAccounts.map(accountId => {
+															const account = connectedAccounts.find(acc => acc.id === accountId);
+															if (!account) return null;
+															
+															const IconComponent = PLATFORMS[account.platform].icon;
+															const customCaption = customCaptions[accountId] || content;
+															
+															return (
+																<div key={accountId} className="space-y-2">
+																	<div className="flex items-center gap-2">
+																		<IconComponent className="w-4 h-4" />
+																		<span className={`text-sm font-medium ${theme.text}`}>
+																			{account.name}
+																		</span>
+																		<span className={`text-xs ${theme.textSecondary}`}>
+																			({PLATFORMS[account.platform].name})
+																		</span>
+																	</div>
+																	<textarea
+																		value={customCaption}
+																		onChange={(e) => updateCustomCaption(accountId, e.target.value)}
+																		placeholder={`Custom caption for ${account.name}...`}
+																		className={`w-full p-3 rounded-lg ${theme.input} ${theme.inputText} ${theme.inputBorder} border focus:outline-none focus:ring-2 ${theme.inputFocusRing} focus:border-transparent min-h-[60px] text-sm`}
+																	/>
+																</div>
+															);
+														})}
+													</div>
+												)}
+											</div>
+										)}
 									</div>
 								)}
 							</div>
