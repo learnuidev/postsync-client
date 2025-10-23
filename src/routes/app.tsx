@@ -49,12 +49,13 @@ function AppDashboard() {
 
 					{/* Top Actions */}
 					<div className="flex flex-col sm:flex-row gap-4 mb-8">
-						<button
+						<Link
+							to="/app/create"
 							className={`flex items-center justify-center gap-2 px-6 py-3 ${theme.button} ${theme.buttonText} rounded-lg font-medium transition-all duration-200 hover:scale-105`}
 						>
 							<Plus className="w-5 h-5" />
 							New Post
-						</button>
+						</Link>
 						<div className="flex items-center flex-1">
 							<div className="relative w-full">
 								<Search
