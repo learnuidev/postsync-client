@@ -1,13 +1,15 @@
 import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import { useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
+import { useTheme } from '../contexts/ThemeContext'
 
 export const Route = createFileRoute('/app')({
   component: AppDashboard,
 })
 
 function AppDashboard() {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
+  const { theme } = useTheme()
   const router = useRouter()
 
   useEffect(() => {
@@ -16,37 +18,12 @@ function AppDashboard() {
     }
   }, [user, router])
 
-  const handleLogout = () => {
-    logout()
-    router.navigate({ to: '/' })
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-gray-900">PostSync</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">Welcome, {user?.name}</span>
-              <button
-                onClick={handleLogout}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <div className={`min-h-screen ${theme.bg}`}>
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <main className="max-w-7xl mx-auto py-6 pt-24 pb-24 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <div className="border-4 border-dashed border-gray-200 rounded-lg h-96 flex items-center justify-center">
+          <div className="border-4 border-dashed border-gray-200 rounded-lg h-96 flex items-center justify-center bg-white">
             <div className="text-center">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
                 Welcome to your PostSync Dashboard
@@ -73,13 +50,13 @@ function AppDashboard() {
 
               {/* Quick Actions */}
               <div className="flex justify-center space-x-4">
-                <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-medium">
+                <button className={`${theme.button} ${theme.buttonText} px-6 py-3 rounded-md font-medium`}>
                   Create New Post
                 </button>
-                <button className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-md font-medium">
+                <button className={`${theme.button} ${theme.buttonText} px-6 py-3 rounded-md font-medium`}>
                   Schedule Post
                 </button>
-                <button className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-md font-medium">
+                <button className={`${theme.button} ${theme.buttonText} px-6 py-3 rounded-md font-medium`}>
                   View Analytics
                 </button>
               </div>

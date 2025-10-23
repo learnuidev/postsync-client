@@ -9,6 +9,7 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 import Header from '../components/Header'
 import BottomNav from '../components/BottomNav'
 import { AuthProvider } from '../hooks/useAuth'
+import { ThemeProvider } from '../contexts/ThemeContext'
 
 import StoreDevtools from '../lib/demo-store-devtools'
 
@@ -54,26 +55,28 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <AuthProvider>
-          <Header />
-          <div className="pb-20 md:pb-0">
-            {children}
-          </div>
-          <BottomNav />
-          <TanStackDevtools
-            config={{
-              position: 'bottom-right',
-            }}
-            plugins={[
-              {
-                name: 'Tanstack Router',
-                render: <TanStackRouterDevtoolsPanel />,
-              },
-              StoreDevtools,
-              TanStackQueryDevtools,
-            ]}
-          />
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <Header />
+            <div className="pb-20 md:pb-0">
+              {children}
+            </div>
+            <BottomNav />
+            <TanStackDevtools
+              config={{
+                position: 'bottom-right',
+              }}
+              plugins={[
+                {
+                  name: 'Tanstack Router',
+                  render: <TanStackRouterDevtoolsPanel />,
+                },
+                StoreDevtools,
+                TanStackQueryDevtools,
+              ]}
+            />
+          </AuthProvider>
+        </ThemeProvider>
         <Scripts />
       </body>
     </html>
