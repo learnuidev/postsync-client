@@ -41,28 +41,28 @@ function LoginComponent() {
 
 	return (
 		<div className={`min-h-screen ${theme.bg} flex items-center justify-center pb-12 pt-24 px-4 sm:px-6 lg:px-8`}>
-			<div className="max-w-md w-full space-y-8 bg-white rounded-xl shadow-xl p-8 border border-gray-200">
+			<div className={`max-w-md w-full space-y-8 ${theme.card} rounded-xl shadow-xl p-8 border ${theme.border}`}>
 				<div className="text-center">
 					<div className="flex justify-center mb-6">
-						<div className="p-3 bg-blue-100 rounded-full">
-							<Calendar className="h-8 w-8 text-blue-600" />
+						<div className={`p-3 ${theme.iconBg} rounded-full`}>
+							<Calendar className={`h-8 w-8 ${theme.iconColor}`} />
 						</div>
 					</div>
-					<h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
+					<h2 className={`mt-6 text-center text-3xl font-bold ${theme.text}`}>
 						Welcome back
 					</h2>
-					<p className="mt-2 text-center text-sm text-gray-600">
+					<p className={`mt-2 text-center text-sm ${theme.textSecondary}`}>
 						Sign in to your PostSync account to continue
 					</p>
 				</div>
 
 				<form className="mt-8 space-y-6" onSubmit={handleSubmit}>
 					{error && (
-						<div className="bg-red-50 border-l-4 border-red-400 p-4 rounded-md animate-fadeIn">
+						<div className={`${theme.errorBg} border-l-4 ${theme.errorBorder} p-4 rounded-md animate-fadeIn`}>
 							<div className="flex">
 								<div className="flex-shrink-0">
 									<svg
-										className="h-5 w-5 text-red-700"
+										className={`h-5 w-5 ${theme.errorText}`}
 										viewBox="0 0 20 20"
 										fill="currentColor"
 									>
@@ -74,7 +74,7 @@ function LoginComponent() {
 									</svg>
 								</div>
 								<div className="ml-3">
-									<p className="text-sm text-red-700">{error}</p>
+									<p className={`text-sm ${theme.errorText}`}>{error}</p>
 								</div>
 							</div>
 						</div>
@@ -84,13 +84,13 @@ function LoginComponent() {
 						<div>
 							<label
 								htmlFor={emailId}
-								className="block text-sm font-medium text-gray-900 mb-2"
+								className={`block text-sm font-medium ${theme.text} mb-2`}
 							>
 								Email address
 							</label>
 							<div className="relative">
 								<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-									<Mail className="h-5 w-5 text-gray-400" />
+									<Mail className={`h-5 w-5 ${theme.textSecondary}`} />
 								</div>
 								<input
 									id={emailId}
@@ -98,7 +98,7 @@ function LoginComponent() {
 									type="email"
 									autoComplete="email"
 									required
-									className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-150 ease-in-out"
+									className={`appearance-none block w-full pl-10 pr-3 py-3 border ${theme.inputBorder} rounded-lg ${theme.inputPlaceholder} ${theme.inputText} ${theme.input} focus:outline-none focus:ring-2 ${theme.inputFocusRing} focus:border-transparent transition duration-150 ease-in-out`}
 									placeholder="you@example.com"
 									value={email}
 									onChange={(e) => setEmail(e.target.value)}
@@ -109,13 +109,13 @@ function LoginComponent() {
 						<div>
 							<label
 								htmlFor={passwordId}
-								className="block text-sm font-medium text-gray-900 mb-2"
+								className={`block text-sm font-medium ${theme.text} mb-2`}
 							>
 								Password
 							</label>
 							<div className="relative">
 								<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-									<Lock className="h-5 w-5 text-gray-400" />
+									<Lock className={`h-5 w-5 ${theme.textSecondary}`} />
 								</div>
 								<input
 									id={passwordId}
@@ -123,7 +123,7 @@ function LoginComponent() {
 									type={showPassword ? "text" : "password"}
 									autoComplete="current-password"
 									required
-									className="appearance-none block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-150 ease-in-out"
+									className={`appearance-none block w-full pl-10 pr-10 py-3 border ${theme.inputBorder} rounded-lg ${theme.inputPlaceholder} ${theme.inputText} ${theme.input} focus:outline-none focus:ring-2 ${theme.inputFocusRing} focus:border-transparent transition duration-150 ease-in-out`}
 									placeholder="••••••••"
 									value={password}
 									onChange={(e) => setPassword(e.target.value)}
@@ -131,7 +131,7 @@ function LoginComponent() {
 								<div className="absolute inset-y-0 right-0 pr-3 flex items-center">
 									<button
 										type="button"
-										className="text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600 transition duration-150 ease-in-out"
+										className={`${theme.textSecondary} hover:text-gray-600 focus:outline-none focus:text-gray-600 transition duration-150 ease-in-out`}
 										onClick={() => setShowPassword(!showPassword)}
 									>
 										{showPassword ? (
@@ -151,11 +151,11 @@ function LoginComponent() {
 								id={rememberId}
 								name="remember-me"
 								type="checkbox"
-								className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+								className={`h-4 w-4 ${theme.link} focus:ring-blue-500 ${theme.inputBorder} rounded`}
 							/>
 							<label
 								htmlFor={rememberId}
-								className="ml-2 block text-sm text-gray-900"
+								className={`ml-2 block text-sm ${theme.text}`}
 							>
 								Remember me
 							</label>
@@ -164,7 +164,7 @@ function LoginComponent() {
 						<div className="text-sm">
 							<a
 								href="#"
-								className="font-medium text-blue-600 hover:text-blue-500 transition duration-150 ease-in-out"
+								className={`font-medium ${theme.link} ${theme.linkHover} transition duration-150 ease-in-out`}
 							>
 								Forgot your password?
 							</a>
@@ -175,7 +175,7 @@ function LoginComponent() {
 						<button
 							type="submit"
 							disabled={isLoading}
-							className={`group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white ${theme.button} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 ease-in-out transform hover:scale-[1.02] active:scale-[0.98]`}
+							className={`group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg ${theme.buttonText} ${theme.button} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 ease-in-out transform hover:scale-[1.02] active:scale-[0.98]`}
 						>
 							{isLoading ? (
 								<span className="flex items-center">
