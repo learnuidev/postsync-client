@@ -158,6 +158,19 @@ function CreatePost() {
 	const getAccountsForGroup = (group: AccountGroup): SocialAccount[] => {
 		return connectedAccounts.filter(account => group.accountIds.includes(account.id));
 	};
+	
+	const getMatchingGroup = (): AccountGroup | null => {
+		if (selectedAccounts.length < 2) return null;
+		
+		return accountGroups.find(group => {
+			// Check if all selected account IDs are in this group
+			const allSelectedInGroup = selectedAccounts.every(id => group.accountIds.includes(id));
+			// Check if all group account IDs are selected (exact match)
+			const allGroupSelected = group.accountIds.every(id => selectedAccounts.includes(id));
+			
+			return allSelectedInGroup && allGroupSelected && selectedAccounts.length === group.accountIds.length;
+		}) || null;
+	};
 
 	const handleBack = () => {
 		navigate({ to: "/app" });
@@ -335,7 +348,7 @@ function CreatePost() {
 							<div
 								className={`mb-8 p-4 ${theme.card} rounded-lg border ${theme.border}`}
 							>
-								{/* Tabs */}
+								{/* Tabs and Save Group Button */}
 								<div className="flex items-center justify-between mb-4">
 									<div className="flex gap-2">
 										<button
@@ -361,20 +374,30 @@ function CreatePost() {
 											Account Groups ({accountGroups.length})
 										</button>
 									</div>
+									
+									{/* Group Info / Save as Group Button */}
+									{activeTab === 'accounts' && selectedAccounts.length > 1 && (() => {
+										const matchingGroup = getMatchingGroup();
+										if (matchingGroup) {
+											return (
+												<div className={`px-4 py-2 rounded-lg text-sm font-medium ${theme.bg} ${theme.border} border flex items-center gap-2`}>
+													<span className={theme.textSecondary}>{matchingGroup.name}</span>
+													<span className={`text-xs ${theme.textMuted}`}>({selectedAccounts.length} accounts)</span>
+												</div>
+											);
+										} else {
+											return (
+												<button
+													type="button"
+													onClick={() => setShowGroupModal(true)}
+													className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${theme.border} border ${theme.textSecondary} hover:${theme.bg}`}
+												>
+													Save {selectedAccounts.length} accounts as group
+												</button>
+											);
+										}
+									})()}
 								</div>
-
-								{/* Save as Group Button */}
-								{activeTab === 'accounts' && selectedAccounts.length > 1 && (
-									<div className="mb-4">
-										<button
-											type="button"
-											onClick={() => setShowGroupModal(true)}
-											className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
-										>
-											Save {selectedAccounts.length} accounts as group
-										</button>
-									</div>
-								)}
 
 								{/* Tab Content */}
 								{activeTab === 'accounts' ? (
