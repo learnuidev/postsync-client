@@ -411,19 +411,21 @@ function CreatePost() {
 										})}
 									</div>
 								) : (
-									<div className="space-y-3">
+									<div className="flex flex-wrap gap-3">
 										{accountGroups.length === 0 ? (
-											<div className={`text-center py-8 ${theme.textSecondary}`}>
+											<div className={`w-full text-center py-8 ${theme.textSecondary}`}>
 												<p>No account groups yet</p>
 												<p className="text-sm mt-2">Select multiple accounts and save them as a group</p>
 											</div>
 										) : (
 											accountGroups.map((group) => {
 												const groupAccounts = getAccountsForGroup(group);
+												const uniquePlatforms = [...new Set(groupAccounts.map(account => account.platform))];
+												
 												return (
 													<div
 														key={group.id}
-														className={`p-4 rounded-lg border cursor-pointer transition-all ${
+														className={`flex items-center gap-2 px-4 py-2 rounded-full border cursor-pointer transition-all group ${
 															group.accountIds.every(id => selectedAccounts.includes(id)) &&
 															selectedAccounts.every(id => group.accountIds.includes(id))
 																? `border-blue-500 bg-blue-50 dark:bg-blue-900/20`
@@ -431,40 +433,59 @@ function CreatePost() {
 														}`}
 														onClick={() => selectGroup(group)}
 													>
-														<div className="flex items-center justify-between">
-															<div>
-																<h4 className={`font-medium ${theme.text}`}>{group.name}</h4>
-																<p className={`text-sm ${theme.textSecondary}`}>
-																	{groupAccounts.length} accounts • Created {new Date(group.createdAt).toLocaleDateString()}
-																</p>
-																<div className="flex flex-wrap gap-2 mt-2">
-																	{groupAccounts.map((account) => {
-																		const IconComponent = PLATFORMS[account.platform].icon;
-																		return (
-																			<span
-																				key={account.id}
-																				className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${theme.bg} ${theme.border} border`}
-																			>
-																				<IconComponent className="w-3 h-3" />
-																				{account.name}
-																			</span>
-																		);
-																	})}
-																</div>
+														<div className="flex items-center gap-2">
+															{/* Platform Icons */}
+															<div className="flex items-center -space-x-2">
+																{uniquePlatforms.slice(0, 3).map((platform, index) => {
+																	const IconComponent = PLATFORMS[platform].icon;
+																	return (
+																		<div
+																			key={platform}
+																			className={`w-5 h-5 rounded-full ${theme.bg} ${theme.border} border flex items-center justify-center`}
+																			style={{ zIndex: 3 - index }}
+																		>
+																			<IconComponent className="w-3 h-3" />
+																		</div>
+																	);
+																})}
+																{uniquePlatforms.length > 3 && (
+																	<div className={`w-5 h-5 rounded-full ${theme.bg} ${theme.border} border flex items-center justify-center text-xs ${theme.textSecondary}`}>
+																		+{uniquePlatforms.length - 3}
+																	</div>
+																)}
 															</div>
-															<button
-																type="button"
-																onClick={(e) => {
-																	e.stopPropagation();
-																	deleteGroup(group.id);
-																}}
-																className={`p-2 rounded-lg ${theme.bg} ${theme.textSecondary} hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 transition-colors`}
-															>
-																<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-																	<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-																</svg>
-															</button>
+															{/* Group Name */}
+															<span className={`text-sm font-medium ${
+																group.accountIds.every(id => selectedAccounts.includes(id)) &&
+																selectedAccounts.every(id => group.accountIds.includes(id))
+																	? 'text-blue-600'
+																	: theme.text
+															}`}>
+																{group.name}
+															</span>
+															{/* Account Count */}
+															<span className={`text-xs ${
+																group.accountIds.every(id => selectedAccounts.includes(id)) &&
+																selectedAccounts.every(id => group.accountIds.includes(id))
+																	? 'text-blue-500'
+																	: theme.textSecondary
+															}`}>
+																({groupAccounts.length})
+															</span>
 														</div>
+														{/* Delete Button */}
+														<button
+															type="button"
+															onClick={(e) => {
+																e.stopPropagation();
+																deleteGroup(group.id);
+															}}
+															className={`opacity-0 group-hover:opacity-100 p-1 rounded-full ${theme.bg} ${theme.textSecondary} hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 transition-all`}
+														>
+															<svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+															</svg>
+														</button>
 													</div>
 												);
 											})
