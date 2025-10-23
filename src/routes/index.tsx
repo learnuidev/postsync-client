@@ -9,6 +9,8 @@ import {
   Facebook,
   Instagram,
   Linkedin,
+  Home,
+  Settings,
 } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useTheme } from '../contexts/ThemeContext'
@@ -18,6 +20,54 @@ export const Route = createFileRoute('/')({ component: LandingPage })
 function LandingPage() {
   const { user } = useAuth()
   const { theme } = useTheme()
+
+  // Show different content based on authentication state
+  if (user) {
+    // For logged-in users, redirect to app/home
+    return (
+      <div className={`min-h-screen ${theme.bg}`}>
+        <div className="flex flex-col items-center justify-center pt-24 px-4">
+          <div className="text-center max-w-md">
+            <div className={`w-16 h-16 ${theme.iconBg} rounded-full flex items-center justify-center mx-auto mb-4`}>
+              <Home className={`w-8 h-8 ${theme.iconColor}`} />
+            </div>
+            <h1 className={`text-4xl font-bold ${theme.text} mb-4`}>Welcome to your Home</h1>
+            <p className={`text-lg ${theme.textSecondary} mb-8`}>
+              This is your personal dashboard where you can navigate to different sections
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Link
+                to="/app"
+                className={`${theme.card} ${theme.border} border rounded-lg p-6 text-center hover:shadow-md transition-all duration-200 hover:scale-105`}
+              >
+                <BarChart3 className={`w-10 h-10 ${theme.iconColor} mx-auto mb-3`} />
+                <h3 className={`text-lg font-semibold ${theme.text}`}>Dashboard</h3>
+                <p className={`text-sm ${theme.textSecondary}`}>View stats and analytics</p>
+              </Link>
+              
+              <Link
+                to="/app/calendar"
+                className={`${theme.card} ${theme.border} border rounded-lg p-6 text-center hover:shadow-md transition-all duration-200 hover:scale-105`}
+              >
+                <Calendar className={`w-10 h-10 ${theme.iconColor} mx-auto mb-3`} />
+                <h3 className={`text-lg font-semibold ${theme.text}`}>Calendar</h3>
+                <p className={`text-sm ${theme.textSecondary}`}>Schedule and manage posts</p>
+              </Link>
+              
+              <Link
+                to="/app/settings"
+                className={`${theme.card} ${theme.border} border rounded-lg p-6 text-center hover:shadow-md transition-all duration-200 hover:scale-105`}
+              >
+                <Settings className={`w-10 h-10 ${theme.iconColor} mx-auto mb-3`} />
+                <h3 className={`text-lg font-semibold ${theme.text}`}>Settings</h3>
+                <p className={`text-sm ${theme.textSecondary}`}>Manage account and preferences</p>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const features = [
     {
