@@ -85,6 +85,9 @@ function CreatePost() {
 	const [coverImage, setCoverImage] = useState<string | null>(null);
 	const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
 	const [videoAction, setVideoAction] = useState<'change' | 'set-cover' | 'custom-cover' | null>(null);
+	const [videoFrames, setVideoFrames] = useState<string[]>([]);
+	const [selectedFrameIndex, setSelectedFrameIndex] = useState<number>(0);
+	const [isLoadingFrames, setIsLoadingFrames] = useState<boolean>(false);
 	
 	// Account groups state
 	const [accountGroups, setAccountGroups] = useState<AccountGroup[]>([]);
@@ -232,6 +235,39 @@ function CreatePost() {
 		}
 	};
 	
+	const extractVideoFrames = (videoSrc: string, callback: (frames: string[]) => void) => {
+		const video = document.createElement('video');
+		video.src = videoSrc;
+		const frames: string[] = [];
+		let extractedFrames = 0;
+		const totalFrames = 10;
+		const frameInterval = 0.5;
+		
+		const extractFrame = () => {
+			if (extractedFrames >= totalFrames || video.currentTime >= video.duration) {
+				callback(frames);
+				return;
+			}
+			
+			const canvas = document.createElement('canvas');
+			const ctx = canvas.getContext('2d');
+			canvas.width = video.videoWidth;
+			canvas.height = video.videoHeight;
+			ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
+			const frameSrc = canvas.toDataURL('image/jpeg', 0.8);
+			frames.push(frameSrc);
+			extractedFrames++;
+			
+			video.currentTime = extractedFrames * frameInterval;
+		};
+		
+		video.onloadeddata = () => {
+			video.currentTime = 0.1;
+		};
+		
+		video.onseeked = extractFrame;
+	};
+	
 	const extractVideoFrame = (videoSrc: string, callback: (frameSrc: string) => void) => {
 		const video = document.createElement('video');
 		video.src = videoSrc;
@@ -253,11 +289,18 @@ function CreatePost() {
 	
 	const setCoverFromVideo = () => {
 		if (uploadedVideo) {
-			extractVideoFrame(uploadedVideo, (frameSrc) => {
-				setCoverImage(frameSrc);
+			extractVideoFrames(uploadedVideo, (frames) => {
+				setVideoFrames(frames);
+				setSelectedFrameIndex(0);
+				setCoverImage(frames[0]);
 			});
 			setVideoAction('set-cover');
 		}
+	};
+	
+	const selectFrame = (index: number) => {
+		setSelectedFrameIndex(index);
+		setCoverImage(videoFrames[index]);
 	};
 	
 	const setCustomCoverImage = () => {
@@ -726,16 +769,61 @@ function CreatePost() {
 														</div>
 													)}
 													
-													{videoAction === 'set-cover' && coverImage && (
+													{videoAction === 'set-cover' && (
 														<div className={`p-4 ${theme.bg} rounded-lg`}>
-															<p className={`text-sm ${theme.text} mb-3`}>
-																Cover image set from video frame
-															</p>
-															<img
-																src={coverImage}
-																alt="Video cover"
-																className="w-32 h-24 object-cover rounded-lg mx-auto"
-															/>
+															{videoFrames.length > 0 ? (
+																<>
+																	<div className="mb-4">
+																		<label className={`block ${theme.text} font-medium mb-2`}>
+																			Select Cover from Video
+																			<span className={`text-xs ${theme.textMuted} ml-2`}>({videoFrames.length} frames)</span>
+																		</label>
+																		<div className="relative">
+																			<input
+																				type="range"
+																				min="0"
+																				max={videoFrames.length - 1}
+																				value={selectedFrameIndex}
+																				onChange={(e) => selectFrame(parseInt(e.target.value))}
+																				className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+																			/>
+																			<div className="flex justify-between text-xs ${theme.textSecondary} px-1">
+																				<span>Frame {selectedFrameIndex + 1}</span>
+																				<span>Last frame</span>
+																			</div>
+																		</div>
+																	</div>
+																	
+																	<div className="grid grid-cols-5 gap-2 mt-4">
+																		{videoFrames.map((frame, index) => (
+																			<button
+																				type="button"
+																				onClick={() => selectFrame(index)}
+																				className={`relative rounded-lg overflow-hidden transition-all ${
+																					selectedFrameIndex === index
+																						? `ring-2 ring-blue-500 border-blue-500`
+																						: `${theme.card} ${theme.border} border hover:${theme.bg}`
+																				}`}
+																			>
+																				<img
+																					src={frame}
+																					alt={`Frame ${index + 1}`}
+																					className="w-full h-20 object-cover"
+																				/>
+																				<div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+																					<span className={`text-xs ${theme.bg} ${theme.text} px-2 py-1 rounded-full`}>
+																						{index + 1}
+																					</span>
+																				</div>
+																			</button>
+																		))}
+																	</div>
+																</>
+															) : (
+																<p className={`text-sm ${theme.text}`}>
+																	Cover image set from video frame
+																</p>
+															)}
 														</div>
 													)}
 													
@@ -860,6 +948,25 @@ function CreatePost() {
 											<p>Type: {videoFile.type}</p>
 										</div>
 									)}
+								</div>
+							)}
+							
+							{/* Cover Image Preview */}
+							{postType === 'video' && coverImage && (
+								<div
+									className={`p-4 ${theme.card} rounded-lg border ${theme.border} mb-6`}
+								>
+									<h3 className={`font-semibold ${theme.text} mb-4`}>
+										Cover Image
+									</h3>
+									<img
+										src={coverImage}
+										alt="Selected cover"
+										className="w-full rounded-lg mb-3"
+									/>
+									<p className={`text-sm ${theme.textSecondary}`}>
+										Cover image will be displayed before video starts
+									</p>
 								</div>
 							)}
 
