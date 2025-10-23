@@ -30,7 +30,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 				content: "width=device-width, initial-scale=1",
 			},
 			{
-				title: "postsync - Social Media Scheduler for Founders",
+				title: "postsync - social media scheduler for everyone",
 			},
 		],
 		links: [
