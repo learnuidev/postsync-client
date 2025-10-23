@@ -1,8 +1,8 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { Calendar, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { useEffect, useId, useState } from "react";
-import { useAuth } from "../hooks/useAuth";
 import { useTheme } from "../contexts/ThemeContext";
+import { useAuth } from "../hooks/useAuth";
 
 export const Route = createFileRoute("/login")({
 	component: LoginComponent,
@@ -40,8 +40,12 @@ function LoginComponent() {
 	};
 
 	return (
-		<div className={`min-h-screen ${theme.bg} flex items-center justify-center pb-12 pt-24 px-4 sm:px-6 lg:px-8`}>
-			<div className={`max-w-md w-full space-y-8 ${theme.card} rounded-xl shadow-xl p-8 border ${theme.border}`}>
+		<div
+			className={`min-h-screen ${theme.bg} flex items-center justify-center pb-12 pt-24 px-4 sm:px-6 lg:px-8`}
+		>
+			<div
+				className={`max-w-md w-full space-y-8 ${theme.card} rounded-xl shadow-xl p-8 border ${theme.border}`}
+			>
 				<div className="text-center">
 					<div className="flex justify-center mb-6">
 						<div className={`p-3 ${theme.iconBg} rounded-full`}>
@@ -58,7 +62,9 @@ function LoginComponent() {
 
 				<form className="mt-8 space-y-6" onSubmit={handleSubmit}>
 					{error && (
-						<div className={`${theme.errorBg} border-l-4 ${theme.errorBorder} p-4 rounded-md animate-fadeIn`}>
+						<div
+							className={`${theme.errorBg} border-l-4 ${theme.errorBorder} p-4 rounded-md animate-fadeIn`}
+						>
 							<div className="flex">
 								<div className="flex-shrink-0">
 									<svg

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react'
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react'
 
 interface User {
   id: string
@@ -18,6 +18,28 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isClient, setIsClient] = useState(false)
+
+  // Check if we're on the client side
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // Load user from localStorage on client side
+  useEffect(() => {
+    if (isClient) {
+      const savedUser = localStorage.getItem('user')
+      if (savedUser) {
+        try {
+          const parsedUser = JSON.parse(savedUser)
+          setUser(parsedUser)
+        } catch (error) {
+          console.error('Failed to parse user from localStorage:', error)
+          localStorage.removeItem('user')
+        }
+      }
+    }
+  }, [isClient])
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true)
@@ -33,6 +55,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: email,
       }
       setUser(newUser)
+      
+      // Save user to localStorage
+      if (isClient) {
+        localStorage.setItem('user', JSON.stringify(newUser))
+      }
+      
       setIsLoading(false)
       return true
     }
@@ -43,6 +71,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     setUser(null)
+    
+    // Remove user from localStorage
+    if (isClient) {
+      localStorage.removeItem('user')
+    }
   }
 
   return (

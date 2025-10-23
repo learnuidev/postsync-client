@@ -37,7 +37,7 @@ export default function Header() {
 							<div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
 								<Navigation className="w-5 h-5 text-white" />
 							</div>
-							<span className={theme.text}>PostSync</span>
+							<span className={theme.text}>postsync</span>
 						</Link>
 					</h1>
 
