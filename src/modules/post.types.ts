@@ -38,13 +38,15 @@ export const PostSchema = z.object({
 	isScheduled: z.boolean().default(false),
 	scheduleDate: z.string().optional(),
 	scheduleTime: z.string().optional(),
-	mediaFiles: z.array(z.instanceof(File)).optional(),
-	coverImage: z.instanceof(File).optional(),
+	mediaIds: z.array(z.string()).optional(),
+	coverImageId: z.string().optional(),
 });
 
 // Create post input schema
 export const CreatePostInputSchema = PostSchema.extend({
 	// Additional fields for creation
+	mediaFiles: z.array(z.instanceof(File)).optional(),
+	coverImage: z.instanceof(File).optional(),
 });
 
 // Post response schema
@@ -57,6 +59,8 @@ export const PostResponseSchema = z.object({
 	status: z.enum(["draft", "scheduled", "published", "failed"]),
 	scheduledAt: z.string().optional(),
 	publishedAt: z.string().optional(),
+	mediaIds: z.array(z.string()).optional(),
+	coverImageId: z.string().optional(),
 	createdAt: z.string(),
 	updatedAt: z.string(),
 });

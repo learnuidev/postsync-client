@@ -1,47 +1,83 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CreatePostInput, PostResponse } from "./post.types";
+import { useCreateMediaMutation } from "./create-media-mutation";
+import { CreateMediaInput } from "./media.types";
+
+// API function to upload media files
+const uploadMediaFiles = async (
+	mediaFiles: File[],
+	createMediaMutation: ReturnType<typeof useCreateMediaMutation>["mutateAsync"]
+): Promise<string[]> => {
+	const mediaIds: string[] = [];
+	
+	for (const file of mediaFiles) {
+		const mediaType = file.type.startsWith("image/") ? "image" : 
+						 file.type.startsWith("video/") ? "video" : 
+						 file.type.startsWith("audio/") ? "audio" : "image";
+		
+		const mediaData: CreateMediaInput = {
+			file,
+			type: mediaType,
+			generateThumbnail: mediaType === "video",
+		};
+		
+		const mediaResponse = await createMediaMutation(mediaData);
+		mediaIds.push(mediaResponse.id);
+	}
+	
+	return mediaIds;
+};
 
 // API function to create a post
-const createPost = async (postData: CreatePostInput): Promise<PostResponse[]> => {
+const createPost = async (
+	postData: CreatePostInput,
+	createMediaMutation: ReturnType<typeof useCreateMediaMutation>["mutateAsync"]
+): Promise<PostResponse[]> => {
+	// Upload media files first if they exist
+	let mediaIds: string[] = [];
+	let coverImageId: string | undefined;
+	
+	// Upload media files
+	if (postData.mediaFiles && postData.mediaFiles.length > 0) {
+		mediaIds = await uploadMediaFiles(postData.mediaFiles, createMediaMutation);
+	}
+	
+	// Upload cover image if present (for video posts)
+	if (postData.coverImage) {
+		const coverImageData: CreateMediaInput = {
+			file: postData.coverImage,
+			type: "image",
+			generateThumbnail: false,
+		};
+		
+		const coverMediaResponse = await createMediaMutation(coverImageData);
+		coverImageId = coverMediaResponse.id;
+	}
+	
 	// For each selected account, we'll create a post
 	const posts = await Promise.all(
 		postData.selectedAccounts.map(async (accountId) => {
-			// Create FormData for file uploads
-			const formData = new FormData();
-			
-			// Add basic post data
-			formData.append("content", postData.content);
-			formData.append("postType", postData.postType);
-			formData.append("accountId", accountId);
-			formData.append("isScheduled", postData.isScheduled.toString());
-			
-			// Add custom caption if enabled for this account
-			if (postData.useCustomCaptions && postData.customCaptions?.[accountId]) {
-				formData.append("content", postData.customCaptions[accountId]);
-			}
-			
-			// Add schedule date and time if scheduled
-			if (postData.isScheduled && postData.scheduleDate && postData.scheduleTime) {
-				formData.append("scheduleDate", postData.scheduleDate);
-				formData.append("scheduleTime", postData.scheduleTime);
-			}
-			
-			// Add media files if present
-			if (postData.mediaFiles && postData.mediaFiles.length > 0) {
-				postData.mediaFiles.forEach((file, index) => {
-					formData.append(`mediaFile_${index}`, file);
-				});
-			}
-			
-			// Add cover image if present (for video posts)
-			if (postData.coverImage) {
-				formData.append("coverImage", postData.coverImage);
-			}
+			// Create post data object
+			const postPayload = {
+				content: postData.useCustomCaptions && postData.customCaptions?.[accountId] 
+					? postData.customCaptions[accountId] 
+					: postData.content,
+				postType: postData.postType,
+				accountId,
+				isScheduled: postData.isScheduled,
+				scheduleDate: postData.isScheduled ? postData.scheduleDate : undefined,
+				scheduleTime: postData.isScheduled ? postData.scheduleTime : undefined,
+				mediaIds: mediaIds.length > 0 ? mediaIds : undefined,
+				coverImageId,
+			};
 			
 			// Make API call - adjust the endpoint as needed
 			const response = await fetch("/api/posts", {
 				method: "POST",
-				body: formData,
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify(postPayload),
 			});
 			
 			if (!response.ok) {
@@ -58,9 +94,11 @@ const createPost = async (postData: CreatePostInput): Promise<PostResponse[]> =>
 // Custom hook for creating posts
 export const useCreatePostMutation = () => {
 	const queryClient = useQueryClient();
+	const createMediaMutation = useCreateMediaMutation();
 	
 	return useMutation({
-		mutationFn: createPost,
+		mutationFn: (postData: CreatePostInput) => 
+			createPost(postData, createMediaMutation.mutateAsync),
 		onSuccess: (data) => {
 			// Invalidate relevant queries
 			queryClient.invalidateQueries({ queryKey: ["posts"] });
