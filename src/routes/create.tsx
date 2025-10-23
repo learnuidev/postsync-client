@@ -72,26 +72,30 @@ function CreatePost() {
 	const [isScheduled, setIsScheduled] = useState(false);
 	const [scheduleDate, setScheduleDate] = useState("");
 	const [scheduleTime, setScheduleTime] = useState("");
-	
+
 	// Custom captions per account
-	const [customCaptions, setCustomCaptions] = useState<Record<string, string>>({});
+	const [customCaptions, setCustomCaptions] = useState<Record<string, string>>(
+		{},
+	);
 	const [useCustomCaptions, setUseCustomCaptions] = useState(false);
-	
+
 	// Video upload state
 	const [uploadedVideo, setUploadedVideo] = useState<string | null>(null);
 	const [videoFile, setVideoFile] = useState<File | null>(null);
-	
+
 	// Video cover image state
 	const [coverImage, setCoverImage] = useState<string | null>(null);
 	const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
-	const [videoAction, setVideoAction] = useState<'change' | 'set-cover' | 'custom-cover' | null>(null);
+	const [videoAction, setVideoAction] = useState<
+		"change" | "set-cover" | "custom-cover" | null
+	>(null);
 	const [videoFrames, setVideoFrames] = useState<string[]>([]);
 	const [selectedFrameIndex, setSelectedFrameIndex] = useState<number>(0);
 	const [isLoadingFrames, setIsLoadingFrames] = useState<boolean>(false);
-	
+
 	// Account groups state
 	const [accountGroups, setAccountGroups] = useState<AccountGroup[]>([]);
-	const [activeTab, setActiveTab] = useState<'accounts' | 'groups'>('accounts');
+	const [activeTab, setActiveTab] = useState<"accounts" | "groups">("accounts");
 	const [showGroupModal, setShowGroupModal] = useState(false);
 	const [groupName, setGroupName] = useState("");
 
@@ -109,35 +113,42 @@ function CreatePost() {
 			router.navigate({ to: "/login" });
 		}
 	}, [user, router]);
-	
+
 	// Load account groups from localStorage on mount
 	useEffect(() => {
-		const storedGroups = localStorage.getItem('accountGroups');
+		const storedGroups = localStorage.getItem("accountGroups");
 		if (storedGroups) {
 			try {
 				setAccountGroups(JSON.parse(storedGroups));
 			} catch (error) {
-				console.error('Error loading account groups:', error);
+				console.error("Error loading account groups:", error);
 			}
 		}
 	}, []);
-	
+
 	// Save account groups to localStorage whenever they change
 	useEffect(() => {
 		if (accountGroups.length > 0) {
-			localStorage.setItem('accountGroups', JSON.stringify(accountGroups));
+			localStorage.setItem("accountGroups", JSON.stringify(accountGroups));
 		}
 	}, [accountGroups]);
 
 	const getAccountsForPostType = (type: PostType): SocialAccount[] => {
 		const supportedPlatforms = {
 			text: ["facebook", "linkedin", "threads", "twitter"],
-			video: ["facebook", "linkedin", "threads", "twitter", "tiktok", "youtube"],
+			video: [
+				"facebook",
+				"linkedin",
+				"threads",
+				"twitter",
+				"tiktok",
+				"youtube",
+			],
 			image: ["facebook", "linkedin", "threads", "twitter", "tiktok"],
 		} as const;
-		
-		return connectedAccounts.filter((account) => 
-			supportedPlatforms[type]?.includes(account.platform)
+
+		return connectedAccounts.filter((account) =>
+			supportedPlatforms[type]?.includes(account.platform),
 		);
 	};
 
@@ -148,7 +159,7 @@ function CreatePost() {
 			setSelectedAccounts([...selectedAccounts, accountId]);
 		}
 	};
-	
+
 	const saveAsGroup = () => {
 		if (groupName.trim() && selectedAccounts.length > 1) {
 			const newGroup: AccountGroup = {
@@ -158,34 +169,46 @@ function CreatePost() {
 				createdAt: new Date().toISOString(),
 			};
 			setAccountGroups([...accountGroups, newGroup]);
-			setGroupName('');
+			setGroupName("");
 			setShowGroupModal(false);
 		}
 	};
-	
+
 	const deleteGroup = (groupId: string) => {
-		setAccountGroups(accountGroups.filter(group => group.id !== groupId));
+		setAccountGroups(accountGroups.filter((group) => group.id !== groupId));
 	};
-	
+
 	const selectGroup = (group: AccountGroup) => {
 		setSelectedAccounts(group.accountIds);
 	};
-	
+
 	const getAccountsForGroup = (group: AccountGroup): SocialAccount[] => {
-		return connectedAccounts.filter(account => group.accountIds.includes(account.id));
+		return connectedAccounts.filter((account) =>
+			group.accountIds.includes(account.id),
+		);
 	};
-	
+
 	const getMatchingGroup = (): AccountGroup | null => {
 		if (selectedAccounts.length < 2) return null;
-		
-		return accountGroups.find(group => {
-			// Check if all selected account IDs are in this group
-			const allSelectedInGroup = selectedAccounts.every(id => group.accountIds.includes(id));
-			// Check if all group account IDs are selected (exact match)
-			const allGroupSelected = group.accountIds.every(id => selectedAccounts.includes(id));
-			
-			return allSelectedInGroup && allGroupSelected && selectedAccounts.length === group.accountIds.length;
-		}) || null;
+
+		return (
+			accountGroups.find((group) => {
+				// Check if all selected account IDs are in this group
+				const allSelectedInGroup = selectedAccounts.every((id) =>
+					group.accountIds.includes(id),
+				);
+				// Check if all group account IDs are selected (exact match)
+				const allGroupSelected = group.accountIds.every((id) =>
+					selectedAccounts.includes(id),
+				);
+
+				return (
+					allSelectedInGroup &&
+					allGroupSelected &&
+					selectedAccounts.length === group.accountIds.length
+				);
+			}) || null
+		);
 	};
 
 	const handleBack = () => {
@@ -198,21 +221,21 @@ function CreatePost() {
 	};
 
 	const updateCustomCaption = (accountId: string, caption: string) => {
-		setCustomCaptions(prev => ({
+		setCustomCaptions((prev) => ({
 			...prev,
-			[accountId]: caption
+			[accountId]: caption,
 		}));
 	};
-	
+
 	const handleVideoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0];
-		if (file && file.type.startsWith('video/')) {
+		if (file && file.type.startsWith("video/")) {
 			setVideoFile(file);
 			const reader = new FileReader();
 			reader.onload = (e) => {
 				const videoSrc = e.target?.result as string;
 				setUploadedVideo(videoSrc);
-				
+
 				// Extract first frame from video to use as default cover
 				extractVideoFrame(videoSrc, (frameSrc) => {
 					setCoverImage(frameSrc);
@@ -222,10 +245,12 @@ function CreatePost() {
 			setVideoAction(null); // Reset action when new video is uploaded
 		}
 	};
-	
-	const handleCoverImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+
+	const handleCoverImageUpload = (
+		event: React.ChangeEvent<HTMLInputElement>,
+	) => {
 		const file = event.target.files?.[0];
-		if (file && file.type.startsWith('image/')) {
+		if (file && file.type.startsWith("image/")) {
 			setCoverImageFile(file);
 			const reader = new FileReader();
 			reader.onload = (e) => {
@@ -234,59 +259,68 @@ function CreatePost() {
 			reader.readAsDataURL(file);
 		}
 	};
-	
-	const extractVideoFrames = (videoSrc: string, callback: (frames: string[]) => void) => {
-		const video = document.createElement('video');
+
+	const extractVideoFrames = (
+		videoSrc: string,
+		callback: (frames: string[]) => void,
+	) => {
+		const video = document.createElement("video");
 		video.src = videoSrc;
 		const frames: string[] = [];
 		let extractedFrames = 0;
 		const totalFrames = 10;
 		const frameInterval = 0.5;
-		
+
 		const extractFrame = () => {
-			if (extractedFrames >= totalFrames || video.currentTime >= video.duration) {
+			if (
+				extractedFrames >= totalFrames ||
+				video.currentTime >= video.duration
+			) {
 				callback(frames);
 				return;
 			}
-			
-			const canvas = document.createElement('canvas');
-			const ctx = canvas.getContext('2d');
+
+			const canvas = document.createElement("canvas");
+			const ctx = canvas.getContext("2d");
 			canvas.width = video.videoWidth;
 			canvas.height = video.videoHeight;
 			ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
-			const frameSrc = canvas.toDataURL('image/jpeg', 0.8);
+			const frameSrc = canvas.toDataURL("image/jpeg", 0.8);
 			frames.push(frameSrc);
 			extractedFrames++;
-			
+
 			video.currentTime = extractedFrames * frameInterval;
 		};
-		
+
 		video.onloadeddata = () => {
 			video.currentTime = 0.1;
 		};
-		
+
 		video.onseeked = extractFrame;
 	};
-	
-	const extractVideoFrame = (videoSrc: string, callback: (frameSrc: string) => void) => {
-		const video = document.createElement('video');
+
+	const extractVideoFrame = (
+		videoSrc: string,
+		callback: (frameSrc: string) => void,
+	) => {
+		const video = document.createElement("video");
 		video.src = videoSrc;
 		video.currentTime = 0.1; // Capture frame after 0.1 seconds
 		video.onloadeddata = () => {
-			const canvas = document.createElement('canvas');
-			const ctx = canvas.getContext('2d');
+			const canvas = document.createElement("canvas");
+			const ctx = canvas.getContext("2d");
 			canvas.width = video.videoWidth;
 			canvas.height = video.videoHeight;
 			ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
-			const frameSrc = canvas.toDataURL('image/jpeg', 0.8);
+			const frameSrc = canvas.toDataURL("image/jpeg", 0.8);
 			callback(frameSrc);
 		};
 	};
-	
+
 	const changeVideo = () => {
-		setVideoAction('change');
+		setVideoAction("change");
 	};
-	
+
 	const setCoverFromVideo = () => {
 		if (uploadedVideo) {
 			extractVideoFrames(uploadedVideo, (frames) => {
@@ -294,24 +328,24 @@ function CreatePost() {
 				setSelectedFrameIndex(0);
 				setCoverImage(frames[0]);
 			});
-			setVideoAction('set-cover');
+			setVideoAction("set-cover");
 		}
 	};
-	
+
 	const selectFrame = (index: number) => {
 		setSelectedFrameIndex(index);
 		setCoverImage(videoFrames[index]);
 	};
-	
+
 	const setCustomCoverImage = () => {
-		setVideoAction('custom-cover');
+		setVideoAction("custom-cover");
 	};
-	
+
 	const handleCreatePost = () => {
 		// Here you would implement the actual post creation logic
 		// For now, we'll just log the caption data
 		if (useCustomCaptions && Object.keys(customCaptions).length > 0) {
-			console.log('Custom captions per account:', customCaptions);
+			console.log("Custom captions per account:", customCaptions);
 		}
 		alert("Post created successfully!");
 		navigate({ to: "/app" });
@@ -483,10 +517,10 @@ function CreatePost() {
 									<div className="flex gap-2">
 										<button
 											type="button"
-											onClick={() => setActiveTab('accounts')}
+											onClick={() => setActiveTab("accounts")}
 											className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-												activeTab === 'accounts'
-													? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+												activeTab === "accounts"
+													? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
 													: `${theme.textSecondary} hover:${theme.text}`
 											}`}
 										>
@@ -494,43 +528,51 @@ function CreatePost() {
 										</button>
 										<button
 											type="button"
-											onClick={() => setActiveTab('groups')}
+											onClick={() => setActiveTab("groups")}
 											className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-												activeTab === 'groups'
-													? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+												activeTab === "groups"
+													? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
 													: `${theme.textSecondary} hover:${theme.text}`
 											}`}
 										>
 											Account Groups ({accountGroups.length})
 										</button>
 									</div>
-									
+
 									{/* Group Info / Save as Group Button */}
-									{activeTab === 'accounts' && selectedAccounts.length > 1 && (() => {
-										const matchingGroup = getMatchingGroup();
-										if (matchingGroup) {
-											return (
-												<div className={`px-4 py-2 rounded-lg text-sm font-medium ${theme.bg} ${theme.border} border flex items-center gap-2`}>
-													<span className={theme.textSecondary}>{matchingGroup.name}</span>
-													<span className={`text-xs ${theme.textMuted}`}>({selectedAccounts.length} accounts)</span>
-												</div>
-											);
-										} else {
-											return (
-												<button
-													type="button"
-													onClick={() => setShowGroupModal(true)}
-													className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${theme.border} border ${theme.textSecondary} hover:${theme.bg}`}
-												>
-													Save {selectedAccounts.length} accounts as group
-												</button>
-											);
-										}
-									})()}
+									{activeTab === "accounts" &&
+										selectedAccounts.length > 1 &&
+										(() => {
+											const matchingGroup = getMatchingGroup();
+											if (matchingGroup) {
+												return (
+													<div
+														className={`px-4 py-2 rounded-lg text-sm font-medium ${theme.bg} ${theme.border} border flex items-center gap-2`}
+													>
+														<span className={theme.textSecondary}>
+															{matchingGroup.name}
+														</span>
+														<span className={`text-xs ${theme.textMuted}`}>
+															({selectedAccounts.length} accounts)
+														</span>
+													</div>
+												);
+											} else {
+												return (
+													<button
+														type="button"
+														onClick={() => setShowGroupModal(true)}
+														className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${theme.border} border ${theme.textSecondary} hover:${theme.bg}`}
+													>
+														Save {selectedAccounts.length} accounts as group
+													</button>
+												);
+											}
+										})()}
 								</div>
 
 								{/* Tab Content */}
-								{activeTab === 'accounts' ? (
+								{activeTab === "accounts" ? (
 									<div className="flex flex-wrap gap-3">
 										{getAccountsForPostType(postType).map((account) => {
 											const IconComponent = PLATFORMS[account.platform].icon;
@@ -545,17 +587,29 @@ function CreatePost() {
 													onClick={() => toggleAccount(account.id)}
 												>
 													<div className="flex items-center gap-2">
-														<IconComponent className={`w-4 h-4 ${
-															selectedAccounts.includes(account.id) ? 'text-blue-600' : theme.textSecondary
-														}`} />
-														<span className={`text-sm font-medium ${
-															selectedAccounts.includes(account.id) ? 'text-blue-600' : theme.text
-														}`}>
+														<IconComponent
+															className={`w-4 h-4 ${
+																selectedAccounts.includes(account.id)
+																	? "text-blue-600"
+																	: theme.textSecondary
+															}`}
+														/>
+														<span
+															className={`text-sm font-medium ${
+																selectedAccounts.includes(account.id)
+																	? "text-blue-600"
+																	: theme.text
+															}`}
+														>
 															{account.name}
 														</span>
-														<span className={`text-xs ${
-															selectedAccounts.includes(account.id) ? 'text-blue-500' : theme.textSecondary
-														}`}>
+														<span
+															className={`text-xs ${
+																selectedAccounts.includes(account.id)
+																	? "text-blue-500"
+																	: theme.textSecondary
+															}`}
+														>
 															• {PLATFORMS[account.platform].name}
 														</span>
 													</div>
@@ -566,21 +620,33 @@ function CreatePost() {
 								) : (
 									<div className="flex flex-wrap gap-3">
 										{accountGroups.length === 0 ? (
-											<div className={`w-full text-center py-8 ${theme.textSecondary}`}>
+											<div
+												className={`w-full text-center py-8 ${theme.textSecondary}`}
+											>
 												<p>No account groups yet</p>
-												<p className="text-sm mt-2">Select multiple accounts and save them as a group</p>
+												<p className="text-sm mt-2">
+													Select multiple accounts and save them as a group
+												</p>
 											</div>
 										) : (
 											accountGroups.map((group) => {
 												const groupAccounts = getAccountsForGroup(group);
-												const uniquePlatforms = [...new Set(groupAccounts.map(account => account.platform))];
-												
+												const uniquePlatforms = [
+													...new Set(
+														groupAccounts.map((account) => account.platform),
+													),
+												];
+
 												return (
 													<div
 														key={group.id}
 														className={`flex items-center gap-2 px-4 py-2 rounded-full border cursor-pointer transition-all group ${
-															group.accountIds.every(id => selectedAccounts.includes(id)) &&
-															selectedAccounts.every(id => group.accountIds.includes(id))
+															group.accountIds.every((id) =>
+																selectedAccounts.includes(id),
+															) &&
+															selectedAccounts.every((id) =>
+																group.accountIds.includes(id),
+															)
 																? `border-blue-500 bg-blue-50 dark:bg-blue-900/20`
 																: `${theme.border} ${theme.card} hover:border-opacity-50`
 														}`}
@@ -589,40 +655,57 @@ function CreatePost() {
 														<div className="flex items-center gap-2">
 															{/* Platform Icons */}
 															<div className="flex items-center -space-x-2">
-																{uniquePlatforms.slice(0, 3).map((platform, index) => {
-																	const IconComponent = PLATFORMS[platform].icon;
-																	return (
-																		<div
-																			key={platform}
-																			className={`w-5 h-5 rounded-full ${theme.bg} ${theme.border} border flex items-center justify-center`}
-																			style={{ zIndex: 3 - index }}
-																		>
-																			<IconComponent className="w-3 h-3" />
-																		</div>
-																	);
-																})}
+																{uniquePlatforms
+																	.slice(0, 3)
+																	.map((platform, index) => {
+																		const IconComponent =
+																			PLATFORMS[platform].icon;
+																		return (
+																			<div
+																				key={platform}
+																				className={`w-5 h-5 rounded-full ${theme.bg} ${theme.border} border flex items-center justify-center`}
+																				style={{ zIndex: 3 - index }}
+																			>
+																				<IconComponent className="w-3 h-3" />
+																			</div>
+																		);
+																	})}
 																{uniquePlatforms.length > 3 && (
-																	<div className={`w-5 h-5 rounded-full ${theme.bg} ${theme.border} border flex items-center justify-center text-xs ${theme.textSecondary}`}>
+																	<div
+																		className={`w-5 h-5 rounded-full ${theme.bg} ${theme.border} border flex items-center justify-center text-xs ${theme.textSecondary}`}
+																	>
 																		+{uniquePlatforms.length - 3}
 																	</div>
 																)}
 															</div>
 															{/* Group Name */}
-															<span className={`text-sm font-medium ${
-																group.accountIds.every(id => selectedAccounts.includes(id)) &&
-																selectedAccounts.every(id => group.accountIds.includes(id))
-																	? 'text-blue-600'
-																	: theme.text
-															}`}>
+															<span
+																className={`text-sm font-medium ${
+																	group.accountIds.every((id) =>
+																		selectedAccounts.includes(id),
+																	) &&
+																	selectedAccounts.every((id) =>
+																		group.accountIds.includes(id),
+																	)
+																		? "text-blue-600"
+																		: theme.text
+																}`}
+															>
 																{group.name}
 															</span>
 															{/* Account Count */}
-															<span className={`text-xs ${
-																group.accountIds.every(id => selectedAccounts.includes(id)) &&
-																selectedAccounts.every(id => group.accountIds.includes(id))
-																	? 'text-blue-500'
-																	: theme.textSecondary
-															}`}>
+															<span
+																className={`text-xs ${
+																	group.accountIds.every((id) =>
+																		selectedAccounts.includes(id),
+																	) &&
+																	selectedAccounts.every((id) =>
+																		group.accountIds.includes(id),
+																	)
+																		? "text-blue-500"
+																		: theme.textSecondary
+																}`}
+															>
 																({groupAccounts.length})
 															</span>
 														</div>
@@ -635,8 +718,18 @@ function CreatePost() {
 															}}
 															className={`opacity-0 group-hover:opacity-100 p-1 rounded-full ${theme.bg} ${theme.textSecondary} hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 transition-all`}
 														>
-															<svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-																<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+															<svg
+																className="w-3 h-3"
+																fill="none"
+																stroke="currentColor"
+																viewBox="0 0 24 24"
+															>
+																<path
+																	strokeLinecap="round"
+																	strokeLinejoin="round"
+																	strokeWidth={2}
+																	d="M6 18L18 6M6 6l12 12"
+																/>
 															</svg>
 														</button>
 													</div>
@@ -728,7 +821,7 @@ function CreatePost() {
 															Video uploaded successfully
 														</span>
 													</div>
-													
+
 													<div className="flex gap-3 justify-center">
 														<button
 															type="button"
@@ -752,8 +845,8 @@ function CreatePost() {
 															Set Custom Cover
 														</button>
 													</div>
-													
-													{videoAction === 'change' && (
+
+													{videoAction === "change" && (
 														<div className={`p-4 ${theme.bg} rounded-lg`}>
 															<label className="block">
 																<input
@@ -768,15 +861,21 @@ function CreatePost() {
 															</label>
 														</div>
 													)}
-													
-													{videoAction === 'set-cover' && (
+
+													{videoAction === "set-cover" && (
 														<div className={`p-4 ${theme.bg} rounded-lg`}>
 															{videoFrames.length > 0 ? (
 																<>
 																	<div className="mb-4">
-																		<label className={`block ${theme.text} font-medium mb-2`}>
+																		<label
+																			className={`block ${theme.text} font-medium mb-2`}
+																		>
 																			Select Cover from Video
-																			<span className={`text-xs ${theme.textMuted} ml-2`}>({videoFrames.length} frames)</span>
+																			<span
+																				className={`text-xs ${theme.textMuted} ml-2`}
+																			>
+																				({videoFrames.length} frames)
+																			</span>
 																		</label>
 																		<div className="relative">
 																			<input
@@ -784,16 +883,20 @@ function CreatePost() {
 																				min="0"
 																				max={videoFrames.length - 1}
 																				value={selectedFrameIndex}
-																				onChange={(e) => selectFrame(parseInt(e.target.value))}
+																				onChange={(e) =>
+																					selectFrame(parseInt(e.target.value))
+																				}
 																				className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
 																			/>
 																			<div className="flex justify-between text-xs ${theme.textSecondary} px-1">
-																				<span>Frame {selectedFrameIndex + 1}</span>
+																				<span>
+																					Frame {selectedFrameIndex + 1}
+																				</span>
 																				<span>Last frame</span>
 																			</div>
 																		</div>
 																	</div>
-																	
+
 																	<div className="grid grid-cols-5 gap-2 mt-4">
 																		{videoFrames.map((frame, index) => (
 																			<button
@@ -811,7 +914,9 @@ function CreatePost() {
 																					className="w-full h-20 object-cover"
 																				/>
 																				<div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-																					<span className={`text-xs ${theme.bg} ${theme.text} px-2 py-1 rounded-full`}>
+																					<span
+																						className={`text-xs ${theme.bg} ${theme.text} px-2 py-1 rounded-full`}
+																					>
 																						{index + 1}
 																					</span>
 																				</div>
@@ -826,8 +931,8 @@ function CreatePost() {
 															)}
 														</div>
 													)}
-													
-													{videoAction === 'custom-cover' && (
+
+													{videoAction === "custom-cover" && (
 														<div className={`p-4 ${theme.bg} rounded-lg`}>
 															<label className="block">
 																<input
@@ -857,7 +962,7 @@ function CreatePost() {
 												</div>
 											)}
 										</div>
-										
+
 										{/* Default Caption */}
 										<div className="mb-4">
 											<textarea
@@ -867,50 +972,67 @@ function CreatePost() {
 												className={`w-full p-4 rounded-lg ${theme.input} ${theme.inputText} ${theme.inputBorder} border focus:outline-none focus:ring-2 ${theme.inputFocusRing} focus:border-transparent min-h-[100px]`}
 											/>
 										</div>
-										
+
 										{/* Custom Captions Option */}
 										{selectedAccounts.length > 0 && (
-											<div className={`mb-4 p-4 ${theme.card} rounded-lg border ${theme.border}`}>
+											<div
+												className={`mb-4 p-4 ${theme.card} rounded-lg border ${theme.border}`}
+											>
 												<div className="flex items-center justify-between mb-3">
 													<label className={`font-medium ${theme.text}`}>
 														Custom Captions per Account
 													</label>
 													<button
 														type="button"
-														onClick={() => setUseCustomCaptions(!useCustomCaptions)}
+														onClick={() =>
+															setUseCustomCaptions(!useCustomCaptions)
+														}
 														className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
 															useCustomCaptions
 																? `bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300`
 																: `${theme.card} ${theme.border} border ${theme.textSecondary} hover:${theme.bg}`
 														}`}
 													>
-														{useCustomCaptions ? 'Enabled' : 'Enable'}
+														{useCustomCaptions ? "Enabled" : "Enable"}
 													</button>
 												</div>
-												
+
 												{useCustomCaptions && (
 													<div className="space-y-3">
-														{selectedAccounts.map(accountId => {
-															const account = connectedAccounts.find(acc => acc.id === accountId);
+														{selectedAccounts.map((accountId) => {
+															const account = connectedAccounts.find(
+																(acc) => acc.id === accountId,
+															);
 															if (!account) return null;
-															
-															const IconComponent = PLATFORMS[account.platform].icon;
-															const customCaption = customCaptions[accountId] || content;
-															
+
+															const IconComponent =
+																PLATFORMS[account.platform].icon;
+															const customCaption =
+																customCaptions[accountId] || content;
+
 															return (
 																<div key={accountId} className="space-y-2">
 																	<div className="flex items-center gap-2">
 																		<IconComponent className="w-4 h-4" />
-																		<span className={`text-sm font-medium ${theme.text}`}>
+																		<span
+																			className={`text-sm font-medium ${theme.text}`}
+																		>
 																			{account.name}
 																		</span>
-																		<span className={`text-xs ${theme.textSecondary}`}>
+																		<span
+																			className={`text-xs ${theme.textSecondary}`}
+																		>
 																			({PLATFORMS[account.platform].name})
 																		</span>
 																	</div>
 																	<textarea
 																		value={customCaption}
-																		onChange={(e) => updateCustomCaption(accountId, e.target.value)}
+																		onChange={(e) =>
+																			updateCustomCaption(
+																				accountId,
+																				e.target.value,
+																			)
+																		}
 																		placeholder={`Custom caption for ${account.name}...`}
 																		className={`w-full p-3 rounded-lg ${theme.input} ${theme.inputText} ${theme.inputBorder} border focus:outline-none focus:ring-2 ${theme.inputFocusRing} focus:border-transparent min-h-[60px] text-sm`}
 																	/>
@@ -928,45 +1050,39 @@ function CreatePost() {
 
 						{/* Sidebar - 1 column */}
 						<div className="lg:col-span-1 lg:sticky lg:top-6 lg:self-start">
-							{/* Video Preview */}
-							{postType === 'video' && uploadedVideo && (
+							{/* Video Preview with Cover Image */}
+							{postType === "video" && uploadedVideo && (
 								<div
 									className={`p-4 ${theme.card} rounded-lg border ${theme.border} mb-6`}
 								>
 									<h3 className={`font-semibold ${theme.text} mb-4`}>
 										Video Preview
 									</h3>
-									<video
-										src={uploadedVideo}
-										className="w-full rounded-lg mb-3"
-										controls
-									/>
+
+									{/* Video with Cover Image */}
+									<div className="relative rounded-lg overflow-hidden mb-3">
+										<video
+											src={uploadedVideo}
+											className="w-full"
+											controls
+											poster={coverImage || undefined}
+										/>
+									</div>
+
 									{videoFile && (
 										<div className={`text-sm ${theme.textSecondary}`}>
 											<p>File: {videoFile.name}</p>
-											<p>Size: {(videoFile.size / 1024 / 1024).toFixed(2)} MB</p>
+											<p>
+												Size: {(videoFile.size / 1024 / 1024).toFixed(2)} MB
+											</p>
 											<p>Type: {videoFile.type}</p>
+											{coverImage && (
+												<p className="mt-2 text-xs">
+													✓ Cover image set for video
+												</p>
+											)}
 										</div>
 									)}
-								</div>
-							)}
-							
-							{/* Cover Image Preview */}
-							{postType === 'video' && coverImage && (
-								<div
-									className={`p-4 ${theme.card} rounded-lg border ${theme.border} mb-6`}
-								>
-									<h3 className={`font-semibold ${theme.text} mb-4`}>
-										Cover Image
-									</h3>
-									<img
-										src={coverImage}
-										alt="Selected cover"
-										className="w-full rounded-lg mb-3"
-									/>
-									<p className={`text-sm ${theme.textSecondary}`}>
-										Cover image will be displayed before video starts
-									</p>
 								</div>
 							)}
 
@@ -1050,7 +1166,9 @@ function CreatePost() {
 			{/* Group Creation Modal */}
 			{showGroupModal && (
 				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-					<div className={`w-full max-w-md p-6 rounded-lg ${theme.card} ${theme.border} border mx-4`}>
+					<div
+						className={`w-full max-w-md p-6 rounded-lg ${theme.card} ${theme.border} border mx-4`}
+					>
 						<h3 className={`text-lg font-semibold ${theme.text} mb-4`}>
 							Create Account Group
 						</h3>
@@ -1065,11 +1183,11 @@ function CreatePost() {
 							className={`w-full p-3 rounded-lg ${theme.input} ${theme.inputText} ${theme.inputBorder} border focus:outline-none focus:ring-2 ${theme.inputFocusRing} focus:border-transparent mb-4`}
 							autoFocus
 							onKeyDown={(e) => {
-								if (e.key === 'Enter') {
+								if (e.key === "Enter") {
 									saveAsGroup();
-								} else if (e.key === 'Escape') {
+								} else if (e.key === "Escape") {
 									setShowGroupModal(false);
-									setGroupName('');
+									setGroupName("");
 								}
 							}}
 						/>
@@ -1078,7 +1196,7 @@ function CreatePost() {
 								type="button"
 								onClick={() => {
 									setShowGroupModal(false);
-									setGroupName('');
+									setGroupName("");
 								}}
 								className={`px-4 py-2 rounded-lg ${theme.card} ${theme.border} border ${theme.text} hover:${theme.bg} transition-colors`}
 							>
