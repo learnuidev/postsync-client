@@ -5,6 +5,11 @@ import { useAuth } from "../hooks/useAuth";
 export default function BottomNav() {
 	const { user, logout } = useAuth();
 
+	// Only show bottom navigation if user is logged in
+	if (!user) {
+		return null;
+	}
+
 	return (
 		<>
 			{/* Desktop Navigation - Hidden on mobile */}
@@ -22,40 +27,25 @@ export default function BottomNav() {
 							<span>Home</span>
 						</Link>
 
-						{user ? (
-							<>
-								<Link
-									to="/app"
-									className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors"
-									activeProps={{
-										className: "flex items-center gap-2 text-blue-600",
-									}}
-								>
-									<BarChart3 size={20} />
-									<span>Dashboard</span>
-								</Link>
+						<Link
+							to="/app"
+							className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors"
+							activeProps={{
+								className: "flex items-center gap-2 text-blue-600",
+							}}
+						>
+							<BarChart3 size={20} />
+							<span>Dashboard</span>
+						</Link>
 
-								<button
-									type="button"
-									onClick={logout}
-									className="flex items-center gap-2 text-gray-600 hover:text-red-600 transition-colors"
-								>
-									<LogOut size={20} />
-									<span>Logout</span>
-								</button>
-							</>
-						) : (
-							<Link
-								to="/login"
-								className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors"
-								activeProps={{
-									className: "flex items-center gap-2 text-blue-600",
-								}}
-							>
-								<LogIn size={20} />
-								<span>Login</span>
-							</Link>
-						)}
+						<button
+							type="button"
+							onClick={logout}
+							className="flex items-center gap-2 text-gray-600 hover:text-red-600 transition-colors"
+						>
+							<LogOut size={20} />
+							<span>Logout</span>
+						</button>
 					</div>
 				</div>
 			</nav>
@@ -74,41 +64,26 @@ export default function BottomNav() {
 						<span className="text-xs">Home</span>
 					</Link>
 
-					{user ? (
-						<>
-							<Link
-								to="/app"
-								className="flex flex-col items-center gap-1 p-2 text-gray-600 hover:text-blue-600 transition-colors"
-								activeProps={{
-									className:
-										"flex flex-col items-center gap-1 p-2 text-blue-600",
-								}}
-							>
-								<BarChart3 size={20} />
-								<span className="text-xs">Dashboard</span>
-							</Link>
+					<Link
+						to="/app"
+						className="flex flex-col items-center gap-1 p-2 text-gray-600 hover:text-blue-600 transition-colors"
+						activeProps={{
+							className:
+								"flex flex-col items-center gap-1 p-2 text-blue-600",
+						}}
+					>
+						<BarChart3 size={20} />
+						<span className="text-xs">Dashboard</span>
+					</Link>
 
-							<button
-								type="button"
-								onClick={logout}
-								className="flex flex-col items-center gap-1 p-2 text-gray-600 hover:text-red-600 transition-colors"
-							>
-								<LogOut size={20} />
-								<span className="text-xs">Logout</span>
-							</button>
-						</>
-					) : (
-						<Link
-							to="/login"
-							className="flex flex-col items-center gap-1 p-2 text-gray-600 hover:text-blue-600 transition-colors"
-							activeProps={{
-								className: "flex flex-col items-center gap-1 p-2 text-blue-600",
-							}}
-						>
-							<LogIn size={20} />
-							<span className="text-xs">Login</span>
-						</Link>
-					)}
+					<button
+						type="button"
+						onClick={logout}
+						className="flex flex-col items-center gap-1 p-2 text-gray-600 hover:text-red-600 transition-colors"
+					>
+						<LogOut size={20} />
+						<span className="text-xs">Logout</span>
+					</button>
 				</div>
 			</nav>
 		</>
